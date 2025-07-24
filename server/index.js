@@ -244,4 +244,58 @@ app.post('/api/google-login', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.post('/api/food-analysis', async (req, res) => {
+  const { food, userProfile } = req.body;
+
+  const prompt = `
+    Analyze the safety of "${food}" for a user with the following profile:
+    - Medications: ${userProfile?.medications || 'none specified'}
+    - Health conditions: ${userProfile?.conditions || 'none specified'}
+    - Age: ${userProfile?.age || 'not specified'}
+    
+    Provide analysis in this JSON format:
+    {
+      "status": "safe|caution|avoid",
+      "recommendation": "Brief recommendation text",
+      "warnings": ["warning1", "warning2"],
+      "interactions": ["interaction1", "interaction2"],
+      "benefits": ["benefit1", "benefit2"]
+    }
+    
+    Focus on drug-food interactions and health considerations.
+    Respond ONLY with valid JSON, no extra text.
+  `;
+
+  try {
+    const geminiRes = await axios.post(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+      {
+        contents: [{ parts: [{ text: prompt }] }]
+      }
+    );
+
+    const text = geminiRes.data.candidates[0].content.parts[0].text;
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      // Fallback response if JSON parsing fails
+      result = {
+        status: 'caution',
+        recommendation: `Consider consulting your healthcare provider about "${food}" in relation to your current medications and health conditions.`,
+        warnings: ['Analysis temporarily unavailable'],
+        interactions: [],
+        benefits: []
+      };
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Food analysis error:', error);
+    res.status(500).json({ 
+      error: 'Failed to analyze food. Please try again later.' 
+    });
+  }
+});
+
+app.listen(5000, () => console.log('Server running on port 5000'));

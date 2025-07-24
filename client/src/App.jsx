@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import GeminiRecommend from './pages/GeminiRecommend';
 import Navbar from './components/Navbar';
+import { NotificationProvider } from './hooks/useNotifications';
+import { Toaster } from 'react-hot-toast';
 
 import ProfileWizard from './pages/ProfileWizard';
 import UserProfile from './pages/UserProfile';
@@ -23,20 +25,60 @@ function App() {
     }
   };
 
+  const handleNavigationClick = (section) => {
+    if (location.pathname !== '/') {
+      navigate('/', { state: { scrollTo: section } });
+    } else {
+      // If already on landing page, scroll to section
+      const element = document.getElementById(section);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
+  const handleFAQClick = () => handleNavigationClick('faq');
+  const handleContactClick = () => handleNavigationClick('contact');
+  const handleSupportClick = () => handleNavigationClick('support');
+  const handleSubscriptionClick = () => handleNavigationClick('subscription');
+
   return (
-    <>
-      <Navbar onAboutClick={handleAboutClick} />
+    <NotificationProvider>
+      <Navbar 
+        onAboutClick={handleAboutClick}
+        onFAQClick={handleFAQClick}
+        onContactClick={handleContactClick}
+        onSupportClick={handleSupportClick}
+        onSubscriptionClick={handleSubscriptionClick}
+      />
       <Routes>
         <Route path="/" element={<Landing showAbout={showAbout} setShowAbout={setShowAbout} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/recommend" element={<ErrorBoundary>
+        <Route path="/gemini-recommend" element={<ErrorBoundary>
           <GeminiRecommend />
         </ErrorBoundary>} />
         <Route path="/profile-wizard" element={<ProfileWizard />} />
         <Route path="/profile" element={<UserProfile />} />
       </Routes>
-    </>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            theme: {
+              primary: '#22c55e',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+    </NotificationProvider>
   );
 }
 
