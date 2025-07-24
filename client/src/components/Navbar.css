@@ -1,0 +1,107 @@
+.navbar {
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(90deg, #0a2342 60%, #274472 100%);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-content {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 2rem;
+}
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: 0;
+}
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+  text-decoration: none;
+  margin-right: 1.5rem;
+  letter-spacing: 1px;
+}
+.navbar-link {
+  color:#fff;
+  font-weight: 600;
+  font-size: 1.08rem;
+  text-decoration: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 22px;
+  background: none;
+  border: 2px solid transparent;
+  margin-right: 0.5rem;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  cursor: pointer;
+  outline: none;
+  display: inline-block;
+}
+.navbar-link:hover, .navbar-link:focus {
+  background: linear-gradient(90deg, #0a2342 60%, #274472 100%);
+  color: #fff;
+  border: 2px solid #0a2342;
+}
+.navbar-link.active {
+  background: linear-gradient(90deg, #0a2342 60%, #274472 100%);
+  color: #fff;
+  border: 2px solid #0a2342;
+}
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.navbar-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: rgba(255,255,255,0.10);
+  border-radius: 20px;
+  padding: 0.3rem 1rem;
+}
+.navbar-user-icon {
+  font-size: 1.2rem;
+  color: #fff;
+}
+.navbar-username {
+  font-weight: 500;
+  color: #fff;
+  margin-right: 0.7rem;
+}
+.navbar-logout {
+  background: #fff;
+  color: #0a2342;
+  border: none;
+  border-radius: 12px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.navbar-logout:hover {
+  background: #0a2342;
+  color: #fff;
+}
+@media (max-width: 700px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.7rem 1rem;
+  }
+  .navbar-left {
+    gap: 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+  .navbar-profile {
+    padding: 0.3rem 0.5rem;
+  }
+} 
