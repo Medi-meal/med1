@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './GeminiRecommend.css';
-import ProgressTracker from '../components/ProgressTracker';
 import UserDashboard from '../components/UserDashboard';
 
 // Use environment variable for API URL
@@ -173,7 +172,6 @@ function MealTabs({ selectedMeal, setSelectedMeal }) {
 function MainTabs({ activeMainTab, setActiveMainTab }) {
   const tabs = [
     { id: 'recommendations', label: '🤖 AI Recommendations', icon: '🤖' },
-    { id: 'progress', label: '📊 Progress & Health', icon: '📊' },
     { id: 'dashboard', label: '📈 Analytics & Food', icon: '📈' }
   ];
   
@@ -201,7 +199,7 @@ function MainTabs({ activeMainTab, setActiveMainTab }) {
 }
 
 // Enhanced Recommendation List Component
-function RecommendationList({ mealData, highlightedFood, userProfile, onAddToFoodLogger, selectedMeal }) {
+function RecommendationList({ mealData, userProfile, onAddToFoodLogger, selectedMeal }) {
   const [selectedFoods, setSelectedFoods] = useState([]);
   
   const handleCheckboxChange = (item, isChecked) => {
@@ -275,9 +273,7 @@ function RecommendationList({ mealData, highlightedFood, userProfile, onAddToFoo
         {mealData?.not_recommended?.map((food, idx) => (
           <li 
             key={idx} 
-            className={`food-item not-recommended ${
-              food.toLowerCase().includes(highlightedFood) ? 'highlighted' : ''
-            }`}
+            className="food-item not-recommended"
           >
             <span className="food-name">{food}</span>
             <span className="warning-icon">⚠️</span>
@@ -293,42 +289,6 @@ function RecommendationList({ mealData, highlightedFood, userProfile, onAddToFoo
   );
 }
 
-// Enhanced Food Check Form Component
-function FoodCheckForm({ foodQuery, setFoodQuery, foodWarning, foodCheckLoading, onCheckFood }) {
-  return (
-    <div className="food-check-form">
-      <h3>Check Food Safety</h3>
-      <form onSubmit={onCheckFood} autoComplete="off">
-        <div className="food-query-input-wrapper">
-          <input
-            type="text"
-            value={foodQuery}
-            onChange={e => {
-              setFoodQuery(e.target.value);
-            }}
-            placeholder="Ask about a specific food..."
-            className="form-input"
-            autoComplete="off"
-          />
-          <button 
-            type="submit" 
-            className="food-check-submit"
-            disabled={foodCheckLoading}
-          >
-            {foodCheckLoading ? '...' : 'Check'}
-          </button>
-        </div>
-        
-        {foodWarning && (
-          <div className={`food-warning ${foodWarning.includes('not recommended') ? 'warning' : 'error'}`}>
-            {foodWarning}
-          </div>
-        )}
-      </form>
-    </div>
-  );
-}
-
 // Main Component
 export default function GeminiRecommend() {
   const [form, setForm] = useState({ 
@@ -339,13 +299,8 @@ export default function GeminiRecommend() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
-  const [foodQuery, setFoodQuery] = useState('');
-  const [foodWarning, setFoodWarning] = useState('');
-  const [foodCheckLoading, setFoodCheckLoading] = useState(false);
-  const [highlightedFood, setHighlightedFood] = useState('');
   const [activeMainTab, setActiveMainTab] = useState('recommendations');
   const [loggedFoods, setLoggedFoods] = useState([]);
-  const [healthProfile, setHealthProfile] = useState(null);
   const user = JSON.parse(localStorage.getItem('medimeal_user'));
 
   // Handle URL fragment for direct navigation
@@ -353,9 +308,6 @@ export default function GeminiRecommend() {
     const handleHashChange = () => {
       const hash = window.location.hash.substring(1);
       switch (hash) {
-        case 'progress':
-          setActiveMainTab('progress');
-          break;
         case 'dashboard':
           setActiveMainTab('dashboard');
           break;
@@ -363,11 +315,6 @@ export default function GeminiRecommend() {
         case 'meal-plan':
         case 'nutrition':
           setActiveMainTab('dashboard');
-          break;
-        case 'health-tracker':
-        case 'weight-tracker':
-        case 'workout':
-          setActiveMainTab('progress');
           break;
         default:
           if (hash) {
@@ -389,7 +336,6 @@ export default function GeminiRecommend() {
         .then(res => {
           if (res.data.input) {
             setForm(f => ({ ...f, ...res.data.input }));
-            setHealthProfile(res.data.input); // Store health profile
           }
         })
         .catch(() => console.log('No saved input found'));
@@ -601,56 +547,6 @@ export default function GeminiRecommend() {
     return type.join('-');
   };
 
-  const handleCheckFood = async e => {
-    e.preventDefault();
-    if (!foodQuery.trim()) return;
-    
-    setFoodCheckLoading(true);
-    const mealData = result[selectedMeal?.toLowerCase()];
-    
-    try {
-      // Enhanced food check with more comprehensive data
-      const requestData = {
-        age: parseInt(form.age),
-        gender: form.gender,
-        foodType: form.foodType,
-        disease: form.disease,
-        medication: form.medication,
-        food: foodQuery.trim(),
-        bmi: form.bmi || null
-      };
-      
-      // Use the correct Gemini food check endpoint
-      const res = await axios.post(`${API_URL}/api/gemini-food-check`, requestData);
-      
-      const warningMessage = res.data.warning || res.data.message || 'Food safety checked.';
-      setFoodWarning(warningMessage);
-      
-      // Enhanced highlighting logic
-      if (mealData?.not_recommended?.some(food => 
-        food.toLowerCase().includes(foodQuery.toLowerCase()) ||
-        foodQuery.toLowerCase().includes(food.toLowerCase())
-      )) {
-        setHighlightedFood(foodQuery.toLowerCase());
-      } else {
-        setHighlightedFood('');
-      }
-      
-    } catch (error) {
-      console.error('Error checking food safety:', error);
-      
-      let errorMessage = 'Could not check food safety. Please try again.';
-      if (error.response?.status === 429) {
-        errorMessage = 'Service temporarily busy. Please try again in a moment.';
-      }
-      
-      setFoodWarning(errorMessage);
-      setHighlightedFood('');
-    }
-    
-    setFoodCheckLoading(false);
-  };
-
   return (
     <div className="gemini-main">
       <div className="gemini-bg" />
@@ -717,7 +613,6 @@ export default function GeminiRecommend() {
               {result[selectedMeal?.toLowerCase()] ? (
                 <RecommendationList 
                   mealData={result[selectedMeal.toLowerCase()]} 
-                  highlightedFood={highlightedFood}
                   userProfile={result.userProfile}
                   onAddToFoodLogger={handleAddToFoodLogger}
                   selectedMeal={selectedMeal.toLowerCase()}
@@ -727,168 +622,11 @@ export default function GeminiRecommend() {
                   <p>No recommendations available for this meal.</p>
                 </div>
               )}
-              
-              <FoodCheckForm
-                foodQuery={foodQuery}
-                setFoodQuery={setFoodQuery}
-                foodWarning={foodWarning}
-                foodCheckLoading={foodCheckLoading}
-                onCheckFood={handleCheckFood}
-              />
             </div>
           )}
         </>
       )}
 
-      {activeMainTab === 'progress' && (
-        <>
-          <ProgressTracker healthProfile={healthProfile} />
-          <div className="health-profile-section">
-            <h2>My Health Profile</h2>
-            <p>Update your health information to receive more accurate recommendations.</p>
-            
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              // Save health profile to the backend
-              axios.post(`${API_URL}/api/user-input`, {
-                input: form,
-                email: user?.email
-              })
-              .then(() => {
-                alert('Health profile updated successfully!');
-                setHealthProfile({...form});
-                // Redirect to recommendations after profile update
-                setActiveMainTab('recommendations');
-              })
-              .catch(err => {
-                console.error('Error saving health profile:', err);
-                alert('Failed to save your health profile. Please try again.');
-              });
-            }} className="health-profile-form">
-              <div className="form-grid">
-                {/* Age */}
-                <div className="form-group">
-                  <label>Age</label>
-                  <input
-                    name="age"
-                    type="number"
-                    value={form.age}
-                    onChange={handleChange}
-                    className="form-input"
-                    min="1"
-                    max="120"
-                  />
-                </div>
-                
-                {/* Gender */}
-                <div className="form-group">
-                  <label>Gender</label>
-                  <select
-                    name="gender"
-                    value={form.gender}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                
-                {/* Food Type */}
-                <div className="form-group">
-                  <label>Food Type</label>
-                  <select
-                    name="foodType"
-                    value={form.foodType}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="">Select Food Type</option>
-                    <option value="veg">Vegetarian</option>
-                    <option value="nonveg">Non-Vegetarian</option>
-                    <option value="vegan">Vegan</option>
-                  </select>
-                </div>
-                
-                {/* Weight */}
-                <div className="form-group">
-                  <label>Weight (kg)</label>
-                  <input
-                    name="weight"
-                    type="number"
-                    value={form.weight}
-                    onChange={handleChange}
-                    className="form-input"
-                    step="0.1"
-                  />
-                </div>
-                
-                {/* Height */}
-                <div className="form-group">
-                  <label>Height (cm)</label>
-                  <input
-                    name="height"
-                    type="number"
-                    value={form.height}
-                    onChange={handleChange}
-                    className="form-input"
-                    step="0.1"
-                  />
-                </div>
-                
-                {/* BMI */}
-                <div className="form-group">
-                  <label>BMI</label>
-                  <div className="bmi-inputs">
-                    <input
-                      name="bmi"
-                      type="text"
-                      value={form.bmi}
-                      readOnly
-                      className="form-input"
-                    />
-                    <button type="button" onClick={handleCalculateBMI} className="bmi-button">
-                      Calculate
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Medication */}
-                <div className="form-group">
-                  <label>Medication</label>
-                  <input
-                    name="medication"
-                    type="text"
-                    value={form.medication}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="Enter your medications"
-                  />
-                </div>
-                
-                {/* Medical Condition */}
-                <div className="form-group">
-                  <label>Medical Condition</label>
-                  <input
-                    name="disease"
-                    type="text"
-                    value={form.disease}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="Enter your medical conditions"
-                  />
-                </div>
-              </div>
-              
-              <button type="submit" className="btn btn-primary">
-                Save Health Profile
-              </button>
-            </form>
-          </div>
-        </>
-      )}
       {activeMainTab === 'dashboard' && (
         <UserDashboard 
           user={user} 
