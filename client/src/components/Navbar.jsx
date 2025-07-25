@@ -1,239 +1,256 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
-const Navbar = ({ 
-  onAboutClick, 
-  onFAQClick, 
-  onContactClick, 
-  onSupportClick, 
-  onSubscriptionClick 
-}) => {
+export default function Navbar(props) {
   const navigate = useNavigate();
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('medimeal_user')));
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const handleProfileClick = () => {
-    navigate('/profile');
-  };
+  // Update user state when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUser(JSON.parse(localStorage.getItem('medimeal_user')));
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 1000); // Check every second for changes
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
-  const handleHomeClick = () => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('medimeal_user');
+    setUser(null);
+    setShowDropdown(false);
     navigate('/');
   };
 
-  const handleLoginClick = () => {
-    navigate('/login');
-  };
+  const handleQuickAction = (action) => {
+    setShowDropdown(false);
+    
+    if (!user && action !== 'guide') {
+      navigate('/login');
+      return;
+    }
 
-  const handleSignupClick = () => {
-    navigate('/signup');
+    switch (action) {
+      case 'progress':
+        navigate('/recommend'); // Navigate to ProgressTracker tab
+        // Add URL fragment to directly show progress tracker
+        window.location.hash = '#progress';
+        break;
+      case 'dashboard':
+        navigate('/recommend'); // Navigate to UserDashboard tab
+        // Add URL fragment to directly show dashboard
+        window.location.hash = '#dashboard';
+        break;
+      case 'food-logger':
+        navigate('/recommend');
+        // Add URL fragment for food logging functionality
+        window.location.hash = '#food-logger';
+        break;
+      case 'health-tracker':
+        navigate('/recommend');
+        window.location.hash = '#health-tracker';
+        break;
+      case 'meal-plan':
+        navigate('/recommend');
+        window.location.hash = '#meal-plan';
+        break;
+      case 'nutrition-analysis':
+        navigate('/recommend');
+        window.location.hash = '#nutrition';
+        break;
+      case 'weight-tracker':
+        navigate('/recommend');
+        window.location.hash = '#weight-tracker';
+        break;
+      case 'workout-log':
+        navigate('/recommend');
+        window.location.hash = '#workout';
+        break;
+      case 'profile':
+        navigate('/profile');
+        break;
+      case 'wizard':
+        navigate('/profile-wizard');
+        break;
+      case 'settings':
+        navigate('/profile');
+        window.location.hash = '#settings';
+        break;
+      case 'guide':
+        // Open user guide or help documentation
+        window.open('https://github.com/Mounikakamasani/Medimeal/blob/main/README.md', '_blank');
+        break;
+      default:
+        break;
+    }
   };
 
   return (
-    <nav style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '1rem 2rem',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        {/* Logo */}
-        <div 
-          onClick={handleHomeClick}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            cursor: 'pointer',
-            color: 'white',
-            fontSize: '1.5rem',
-            fontWeight: 'bold'
-          }}
-        >
-          🥗 Medimeal
-        </div>
-
-        {/* Navigation Links */}
-        <div style={{
-          display: 'flex',
-          gap: '2rem',
-          alignItems: 'center'
-        }}>
-          <button
-            onClick={onAboutClick}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            About
-          </button>
-
-          <button
-            onClick={onFAQClick}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            FAQ
-          </button>
-
-          <button
-            onClick={onContactClick}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Contact
-          </button>
-
-          <button
-            onClick={onSupportClick}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Support
-          </button>
-
-          <button
-            onClick={onSubscriptionClick}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Subscribe
-          </button>
-
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              onClick={handleLoginClick}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'rgba(255,255,255,0.3)';
-                e.target.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'rgba(255,255,255,0.2)';
-                e.target.style.transform = 'translateY(0)';
-              }}
+    <nav className="navbar">
+      <div className="navbar-content">
+        <div className="navbar-left">
+          <Link to="/" className="navbar-logo">Medimeal</Link>
+          <Link to="/" className="navbar-link">Home</Link>
+          {props.onAboutClick && (
+            <button className="navbar-link" onClick={props.onAboutClick}>About</button>
+          )}
+          
+          {/* Quick Actions Dropdown */}
+          <div className="navbar-dropdown" ref={dropdownRef}>
+            <button 
+              className="navbar-link dropdown-toggle"
+              onClick={() => setShowDropdown(!showDropdown)}
             >
-              Login
+              Quick Actions ▼
             </button>
+            {showDropdown && (
+              <div className="dropdown-menu">
+                {/* Progress & Analytics Section */}
+                <div className="dropdown-section">
+                  <div className="dropdown-section-title">📊 Progress & Analytics</div>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('progress')}
+                  >
+                    � Progress Tracker
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('dashboard')}
+                  >
+                    � Analytics Dashboard
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('nutrition-analysis')}
+                  >
+                    🔬 Nutrition Analysis
+                  </button>
+                </div>
 
-            <button
-              onClick={handleSignupClick}
-              style={{
-                background: '#22c55e',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                fontWeight: '600',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#16a34a';
-                e.target.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#22c55e';
-                e.target.style.transform = 'translateY(0)';
-              }}
-            >
-              Sign Up
-            </button>
+                {/* Food & Meal Tracking Section */}
+                <div className="dropdown-section">
+                  <div className="dropdown-section-title">🍽️ Food & Meals</div>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('food-logger')}
+                  >
+                    📝 Food Logger
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('meal-plan')}
+                  >
+                    🗓️ Meal Planner
+                  </button>
+                </div>
 
-            <button
-              onClick={handleProfileClick}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'rgba(255,255,255,0.3)';
-                e.target.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'rgba(255,255,255,0.2)';
-                e.target.style.transform = 'translateY(0)';
-              }}
-            >
-              👤 Profile
-            </button>
+                {/* Health Monitoring Section */}
+                <div className="dropdown-section">
+                  <div className="dropdown-section-title">� Health Tracking</div>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('health-tracker')}
+                  >
+                    🏥 Health Monitor
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('weight-tracker')}
+                  >
+                    ⚖️ Weight Tracker
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('workout-log')}
+                  >
+                    🏋️ Workout Log
+                  </button>
+                </div>
+
+                {/* Profile & Settings Section */}
+                <div className="dropdown-section">
+                  <div className="dropdown-section-title">�👤 Profile & Settings</div>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('profile')}
+                  >
+                    🔧 My Profile
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('wizard')}
+                  >
+                    🧙‍♂️ Profile Setup
+                  </button>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('settings')}
+                  >
+                    ⚙️ Settings
+                  </button>
+                </div>
+
+                {/* Help & Support Section */}
+                <div className="dropdown-section">
+                  <div className="dropdown-section-title">❓ Help & Support</div>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => handleQuickAction('guide')}
+                  >
+                    📖 User Guide
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Recommendations Link - Always visible */}
+          <Link to="/recommend" className="navbar-link">🤖 AI Recommendations</Link>
+        </div>
+        
+        <div className="navbar-right">
+          {user ? (
+            <div className="navbar-profile">
+              <span className="navbar-user-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="8" r="4" fill="#a2b9d7"/>
+                  <path d="M4 20c0-2.21 3.58-4 8-4s8 1.79 8 4" fill="#a2b9d7"/>
+                </svg>
+              </span>
+              <Link to="/profile" className="navbar-username" style={{ color: '#fff', textDecoration: 'none', cursor: 'pointer' }}>
+                {user.name ? user.name : 'User'}
+              </Link>
+              <button className="navbar-logout" onClick={handleLogout}>Logout</button>
+            </div>
+          ) : (
+            <>
+              <Link to="/login" className="navbar-link">Login</Link>
+              <Link to="/signup" className="navbar-link">Sign Up</Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}

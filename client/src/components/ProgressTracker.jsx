@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNotifications } from '../hooks/useNotifications';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import '../styles/calendar-heatmap.css';
-import { motion } from 'framer-motion';
 import { ClipLoader } from 'react-spinners';
 import toast from 'react-hot-toast';
 
 const ProgressTracker = () => {
-  const { showSuccess } = useNotifications();
+  useNotifications();
   const [loading, setLoading] = useState(true);
   const [progressData] = useState({
     weeklyGoals: {
@@ -117,9 +117,14 @@ const ProgressTracker = () => {
     
     return (
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ 
+          duration: 0.8,
+          type: "spring",
+          stiffness: 100,
+          damping: 15
+        }}
         style={{ marginBottom: '1.5rem' }}
       >
         <div style={{ 
@@ -135,30 +140,67 @@ const ProgressTracker = () => {
         </div>
         <div style={{
           width: '100%',
-          height: '8px',
+          height: '12px',
           backgroundColor: '#f3f4f6',
-          borderRadius: '4px',
-          overflow: 'hidden'
+          borderRadius: '6px',
+          overflow: 'hidden',
+          position: 'relative'
         }}>
           <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: `${percentage}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
+            initial={{ width: 0, scaleX: 0 }}
+            animate={{ 
+              width: `${percentage}%`,
+              scaleX: 1
+            }}
+            transition={{ 
+              duration: 2,
+              ease: "easeOut",
+              delay: 0.3
+            }}
             style={{
               height: '100%',
-              backgroundColor: color,
-              borderRadius: '4px'
-            }} 
-          />
+              background: `linear-gradient(90deg, ${color}80 0%, ${color} 100%)`,
+              borderRadius: '6px',
+              position: 'relative',
+              transformOrigin: 'left'
+            }}
+          >
+            {/* Animated shine effect */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: '100%' }}
+              transition={{
+                duration: 1.5,
+                delay: 1.5,
+                repeat: Infinity,
+                repeatDelay: 3
+              }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                height: '100%',
+                width: '20px',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                borderRadius: '6px'
+              }}
+            />
+          </motion.div>
         </div>
-        <div style={{ 
-          textAlign: 'center', 
-          marginTop: '0.25rem',
-          fontSize: '0.75rem',
-          color: '#6b7280' 
-        }}>
-          {percentage.toFixed(0)}% Complete
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1 }}
+          style={{ 
+            textAlign: 'center', 
+            marginTop: '0.5rem',
+            fontSize: '0.875rem',
+            fontWeight: '600',
+            color: percentage >= 100 ? '#22c55e' : '#6b7280'
+          }}
+        >
+          {percentage >= 100 ? '🎉 Goal Completed!' : `${percentage.toFixed(0)}% Complete`}
+        </motion.div>
       </motion.div>
     );
   };

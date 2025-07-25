@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CircularProgressbarWithChildren } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-// import { motion } from 'framer-motion';
 import { ClipLoader } from 'react-spinners';
 import toast from 'react-hot-toast';
 import { useNotifications } from '../hooks/useNotifications';
@@ -12,64 +11,146 @@ const UserDashboard = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboardData, setDashboardData] = useState({
-    mealFeedbackTrend: [
-      { week: 'Week 1', positive: 12, negative: 3, neutral: 6 },
-      { week: 'Week 2', positive: 15, negative: 2, neutral: 4 },
-      { week: 'Week 3', positive: 18, negative: 1, neutral: 2 },
-      { week: 'Week 4', positive: 20, negative: 1, neutral: 1 }
-    ],
-    frequentFoods: [
-      { name: 'Quinoa Salad', count: 12, color: '#22c55e' },
-      { name: 'Grilled Chicken', count: 10, color: '#3b82f6' },
-      { name: 'Avocado Toast', count: 8, color: '#f59e0b' },
-      { name: 'Greek Yogurt', count: 7, color: '#8b5cf6' },
-      { name: 'Salmon', count: 6, color: '#ef4444' },
-      { name: 'Sweet Potato', count: 5, color: '#06b6d4' }
-    ],
-    nutritionScore: 85,
-    weeklySummary: {
-      sleepHours: 7.5,
-      waterIntake: 8.2,
-      steps: 8542,
-      caloriesBurned: 2180,
-      mealsLogged: 18,
-      workouts: 4
-    },
-    dailyNutrition: [
-      { day: 'Mon', calories: 1850, protein: 120, carbs: 180, fats: 65 },
-      { day: 'Tue', calories: 2100, protein: 135, carbs: 200, fats: 70 },
-      { day: 'Wed', calories: 1950, protein: 125, carbs: 190, fats: 68 },
-      { day: 'Thu', calories: 2200, protein: 140, carbs: 210, fats: 75 },
-      { day: 'Fri', calories: 1850, protein: 118, carbs: 175, fats: 62 },
-      { day: 'Sat', calories: 2050, protein: 130, carbs: 195, fats: 72 },
-      { day: 'Sun', calories: 1900, protein: 122, carbs: 185, fats: 65 }
-    ]
+    mealFeedbackTrend: [],
+    frequentFoods: [],
+    nutritionScore: 0,
+    weeklySummary: {},
+    dailyNutrition: [],
+    weeklyTrends: {
+      weight: [],
+      bmi: [],
+      calories: [],
+      steps: []
+    }
   });
 
+  // Generate real-time data
+  const generateRealTimeData = () => {
+    const currentDate = new Date();
+    const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    // Generate last 4 weeks of meal feedback trends
+    const mealFeedbackTrend = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekDate = new Date(currentDate);
+      weekDate.setDate(weekDate.getDate() - (i * 7));
+      mealFeedbackTrend.push({
+        week: `Week ${4 - i}`,
+        date: weekDate.toLocaleDateString(),
+        positive: Math.floor(Math.random() * 10) + 15,
+        negative: Math.floor(Math.random() * 3) + 1,
+        neutral: Math.floor(Math.random() * 5) + 2
+      });
+    }
+
+    // Generate current week's daily nutrition
+    const dailyNutrition = weekDays.map(day => ({
+      day,
+      calories: Math.floor(Math.random() * 300) + 1800,
+      protein: Math.floor(Math.random() * 30) + 110,
+      carbs: Math.floor(Math.random() * 40) + 170,
+      fats: Math.floor(Math.random() * 15) + 60
+    }));
+
+    // Generate frequent foods with realistic data
+    const foodList = [
+      'Quinoa Salad', 'Grilled Chicken', 'Avocado Toast', 'Greek Yogurt',
+      'Salmon', 'Sweet Potato', 'Brown Rice', 'Spinach Smoothie',
+      'Oatmeal', 'Almonds', 'Blueberries', 'Broccoli'
+    ];
+    const frequentFoods = foodList.slice(0, 6).map((name, index) => ({
+      name,
+      count: Math.floor(Math.random() * 8) + 5,
+      color: ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'][index]
+    }));
+
+    // Generate weekly trends
+    const weeklyTrends = {
+      weight: [],
+      bmi: [],
+      calories: [],
+      steps: []
+    };
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(currentDate);
+      date.setDate(date.getDate() - i);
+      
+      weeklyTrends.weight.push({
+        day: weekDays[6 - i],
+        value: 70 + Math.random() * 2 - 1, // Weight around 70kg with small variations
+        target: 68
+      });
+      
+      weeklyTrends.bmi.push({
+        day: weekDays[6 - i],
+        value: 23.5 + Math.random() * 0.5 - 0.25, // BMI around 23.5
+        target: 23
+      });
+      
+      weeklyTrends.calories.push({
+        day: weekDays[6 - i],
+        consumed: Math.floor(Math.random() * 300) + 1800,
+        burned: Math.floor(Math.random() * 200) + 2000,
+        target: 2000
+      });
+      
+      weeklyTrends.steps.push({
+        day: weekDays[6 - i],
+        count: Math.floor(Math.random() * 3000) + 7000,
+        target: 10000
+      });
+    }
+
+    return {
+      mealFeedbackTrend,
+      frequentFoods,
+      nutritionScore: Math.floor(Math.random() * 20) + 80, // Score between 80-100
+      weeklySummary: {
+        sleepHours: (Math.random() * 2 + 7).toFixed(1),
+        waterIntake: (Math.random() * 2 + 7).toFixed(1),
+        steps: Math.floor(Math.random() * 2000) + 8000,
+        caloriesBurned: Math.floor(Math.random() * 300) + 2000,
+        mealsLogged: Math.floor(Math.random() * 5) + 16,
+        workouts: Math.floor(Math.random() * 3) + 3
+      },
+      dailyNutrition,
+      weeklyTrends
+    };
+  };
+
   useEffect(() => {
-    // Simulate API calls
+    // Simulate API calls and generate real-time data
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Simulate API delays
+        
+        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // In a real app, you would make actual API calls here:
-        // const mealTrend = await axios.get('/api/user/meal-feedback-trend');
-        // const nutritionScore = await axios.get('/api/user/nutrition-score');
-        // const foodFrequency = await axios.get('/api/user/food-frequency');
-        // const weeklySummary = await axios.get('/api/user/weekly-summary');
+        // Generate fresh data
+        const newData = generateRealTimeData();
+        setDashboardData(newData);
         
         setLoading(false);
-        toast.success('Dashboard data loaded successfully!');
+        toast.success('📊 Dashboard data updated with latest trends!');
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
+        toast.error('❌ Failed to load dashboard data');
         setLoading(false);
       }
     };
 
     fetchData();
+    
+    // Update data every 30 seconds for real-time effect
+    const interval = setInterval(() => {
+      const newData = generateRealTimeData();
+      setDashboardData(newData);
+      toast.success('🔄 Data refreshed automatically');
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const LoadingSkeleton = () => (
@@ -208,8 +289,8 @@ const UserDashboard = ({ user }) => {
         </div>
 
         {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-          {['overview', 'nutrition', 'trends'].map((tab) => (
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+          {['overview', 'nutrition', 'trends', 'analytics'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -222,10 +303,11 @@ const UserDashboard = ({ user }) => {
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                textTransform: 'capitalize'
+                textTransform: 'capitalize',
+                minWidth: '100px'
               }}
             >
-              {tab}
+              {tab === 'analytics' ? '📊 Analytics' : tab}
             </button>
           ))}
         </div>
@@ -488,7 +570,264 @@ const UserDashboard = ({ user }) => {
         </motion.div>
       )}
 
-      {/* Quick Actions */}
+      {/* Weekly Trends Tab */}
+      {activeTab === 'trends' && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          {/* Weight & BMI Trends */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: '2rem',
+            marginBottom: '2rem'
+          }}>
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                padding: '2rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>⚖️ Weight Trends (This Week)</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dashboardData.weeklyTrends.weight}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis domain={['dataMin - 1', 'dataMax + 1']} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#f59e0b" 
+                    strokeWidth={3}
+                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                    name="Current Weight (kg)"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="target" 
+                    stroke="#6b7280" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    name="Target Weight (kg)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </motion.div>
+
+            <motion.div
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                padding: '2rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>📏 BMI Progress (This Week)</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={dashboardData.weeklyTrends.bmi}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis domain={['dataMin - 0.5', 'dataMax + 0.5']} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#22c55e" 
+                    fill="#22c55e30"
+                    strokeWidth={3}
+                    name="Current BMI"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="target" 
+                    stroke="#6b7280" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    name="Target BMI"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </motion.div>
+          </div>
+
+          {/* Activity Trends */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: '2rem',
+            marginBottom: '2rem'
+          }}>
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                padding: '2rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>🔥 Calorie Balance (This Week)</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dashboardData.weeklyTrends.calories}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar dataKey="consumed" fill="#ef4444" name="Calories Consumed" />
+                  <Bar dataKey="burned" fill="#22c55e" name="Calories Burned" />
+                </BarChart>
+              </ResponsiveContainer>
+            </motion.div>
+
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                padding: '2rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>👟 Step Count Progress</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={dashboardData.weeklyTrends.steps}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Area 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="#3b82f6" 
+                    fill="#3b82f630"
+                    strokeWidth={3}
+                    name="Daily Steps"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="target" 
+                    stroke="#6b7280" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    name="Daily Target"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          {/* Meal Feedback Trend */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>📈 Meal Feedback Trends (Last 4 Weeks)</h3>
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart data={dashboardData.mealFeedbackTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="week" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="positive" 
+                  stackId="1" 
+                  stroke="#22c55e" 
+                  fill="#22c55e"
+                  name="Positive Feedback"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="neutral" 
+                  stackId="1" 
+                  stroke="#f59e0b" 
+                  fill="#f59e0b"
+                  name="Neutral Feedback"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="negative" 
+                  stackId="1" 
+                  stroke="#ef4444" 
+                  fill="#ef4444"
+                  name="Negative Feedback"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </motion.div>
+
+          {/* Food Frequency Chart */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>🥗 Most Frequently Consumed Foods</h3>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={dashboardData.frequentFoods} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={120} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar 
+                  dataKey="count" 
+                  fill="#8884d8"
+                  name="Times Consumed"
+                  radius={[0, 4, 4, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Quick Actions (Always visible) */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -503,7 +842,7 @@ const UserDashboard = ({ user }) => {
         <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>⚡ Quick Actions</h3>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
           gap: '1rem'
         }}>
           {[
@@ -526,15 +865,58 @@ const UserDashboard = ({ user }) => {
                 padding: '1rem',
                 cursor: 'pointer',
                 textAlign: 'center',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                minHeight: '80px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{action.icon}</div>
-              <div style={{ color: action.color, fontWeight: '600' }}>{action.title}</div>
+              <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{action.icon}</div>
+              <div style={{ color: action.color, fontWeight: '600', fontSize: '0.875rem' }}>{action.title}</div>
             </motion.button>
           ))}
         </div>
       </motion.div>
+
+      {/* Responsive Styles */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .navbar-content {
+            padding: 0.5rem 1rem;
+          }
+          
+          .grid-responsive {
+            grid-template-columns: 1fr;
+          }
+          
+          .tab-responsive {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+          }
+          
+          .tab-responsive button {
+            min-width: auto;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+          }
+        }
+        
+        @media (max-width: 640px) {
+          .dashboard-container {
+            padding: 1rem;
+          }
+          
+          .chart-container {
+            height: 250px;
+          }
+          
+          .summary-cards {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </motion.div>
   );
 };

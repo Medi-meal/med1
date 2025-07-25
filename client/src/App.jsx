@@ -6,6 +6,7 @@ import GeminiRecommend from './pages/GeminiRecommend';
 import Navbar from './components/Navbar';
 import { NotificationProvider } from './hooks/useNotifications';
 import { Toaster } from 'react-hot-toast';
+import './styles/responsive.css'; // Add responsive styles
 
 import ProfileWizard from './pages/ProfileWizard';
 import UserProfile from './pages/UserProfile';

@@ -26,7 +26,7 @@ const EnhancedUserProfile = ({ user, healthProfile, onUpdateProfile }) => {
       
       setIsEditing(false);
       showSuccess('Profile updated successfully!');
-    } catch (error) {
+    } catch {
       showError('Failed to update profile. Please try again.');
     }
   };

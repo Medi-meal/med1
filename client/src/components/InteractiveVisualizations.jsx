@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 
-const InteractiveVisualizations = ({ healthProfile, stats }) => {
+const InteractiveVisualizations = () => {
   const [activeChart, setActiveChart] = useState('nutrition');
-  const [timeframe, setTimeframe] = useState('week');
 
   // Sample data for visualizations
   const nutritionData = {

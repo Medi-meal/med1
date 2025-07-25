@@ -10,7 +10,6 @@ const FoodLogger = ({ user }) => {
     notes: ''
   });
   const [foodInput, setFoodInput] = useState('');
-  const [selectedFood, setSelectedFood] = useState(null);
   const { showSuccess, showError } = useNotifications();
 
   // Sample food database
@@ -62,9 +61,7 @@ const FoodLogger = ({ user }) => {
       totalCalories: prev.totalCalories + food.calories
     }));
     setFoodInput('');
-    setSelectedFood(null);
   };
-
   const removeFoodFromMeal = (foodId) => {
     const foodToRemove = currentMeal.foods.find(f => f.id === foodId);
     setCurrentMeal(prev => ({
@@ -431,4 +428,5 @@ const FoodLogger = ({ user }) => {
   );
 };
 
+// Export at top level
 export default FoodLogger;
