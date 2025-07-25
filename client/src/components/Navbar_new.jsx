@@ -68,17 +68,27 @@ const Navbar = ({
           <button
             onClick={onAboutClick}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.2)',
               color: 'white',
               cursor: 'pointer',
               fontSize: '1rem',
-              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              padding: '0.6rem 1.2rem',
               borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
+              transition: 'all 0.2s ease',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.25)';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.15)';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
           >
             About
           </button>
@@ -86,17 +96,27 @@ const Navbar = ({
           <button
             onClick={onFAQClick}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.2)',
               color: 'white',
               cursor: 'pointer',
               fontSize: '1rem',
-              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              padding: '0.6rem 1.2rem',
               borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
+              transition: 'all 0.2s ease',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.25)';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.15)';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
           >
             FAQ
           </button>
@@ -104,17 +124,27 @@ const Navbar = ({
           <button
             onClick={onContactClick}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.2)',
               color: 'white',
               cursor: 'pointer',
               fontSize: '1rem',
-              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              padding: '0.6rem 1.2rem',
               borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
+              transition: 'all 0.2s ease',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.25)';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.15)';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
           >
             Contact
           </button>
@@ -122,17 +152,27 @@ const Navbar = ({
           <button
             onClick={onSupportClick}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.2)',
               color: 'white',
               cursor: 'pointer',
               fontSize: '1rem',
-              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              padding: '0.6rem 1.2rem',
               borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
+              transition: 'all 0.2s ease',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.25)';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.15)';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
           >
             Support
           </button>
@@ -140,17 +180,27 @@ const Navbar = ({
           <button
             onClick={onSubscriptionClick}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.2)',
               color: 'white',
               cursor: 'pointer',
               fontSize: '1rem',
-              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              padding: '0.6rem 1.2rem',
               borderRadius: '8px',
-              transition: 'background-color 0.2s ease'
+              transition: 'all 0.2s ease',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.25)';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'rgba(255,255,255,0.15)';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
           >
             Subscribe
           </button>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useNotifications } from '../hooks/useNotifications';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import CalendarHeatmap from 'react-calendar-heatmap';
@@ -7,6 +6,9 @@ import 'react-calendar-heatmap/dist/styles.css';
 import '../styles/calendar-heatmap.css';
 import { ClipLoader } from 'react-spinners';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import { FaPlus, FaMinus } from 'react-icons/fa';
+import './ProgressTracker.css';
 
 const ProgressTracker = ({ healthProfile }) => {
   useNotifications();
@@ -17,6 +19,11 @@ const ProgressTracker = ({ healthProfile }) => {
       waterIntake: { current: 6, target: 8, percentage: 75 },
       exerciseMinutes: { current: 180, target: 300, percentage: 60 },
       healthyChoices: { current: 8, target: 10, percentage: 80 }
+    },
+    dailyGoals: {
+        calories: { current: 1800, target: 2200, unit: 'kcal', color: '#3b82f6' },
+        water: { current: 5, target: 8, unit: 'glasses', color: '#8b5cf6' },
+        exercise: { current: 25, target: 45, unit: 'min', color: '#f59e0b' },
     },
     bmiHistory: [
       { month: 'Jan', bmi: 25.5 },
@@ -56,6 +63,22 @@ const ProgressTracker = ({ healthProfile }) => {
       { icon: '🔥', title: 'Streak Champion', description: 'Maintain 14-day streak', unlocked: false }
     ]
   });
+
+  const handleGoalChange = (goal, amount) => {
+    setProgressData(prev => {
+      const newCurrent = Math.max(0, prev.dailyGoals[goal].current + amount);
+      return {
+        ...prev,
+        dailyGoals: {
+          ...prev.dailyGoals,
+          [goal]: {
+            ...prev.dailyGoals[goal],
+            current: newCurrent,
+          }
+        }
+      };
+    });
+  };
 
   // Update BMI history and recommended calories when healthProfile changes
   useEffect(() => {
@@ -166,6 +189,66 @@ const ProgressTracker = ({ healthProfile }) => {
   if (loading) {
     return <LoadingSkeleton />;
   }
+
+  const GoalProgressBar = ({ current, target, label, color, unit, onUpdate, goalKey }) => {
+    const percentage = Math.min((current / target) * 100, 100);
+    
+    return (
+      <motion.div 
+        className="goal-progress-bar"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+      >
+        <div className="goal-header">
+          <span className="goal-label">{label}</span>
+          <span className="recommended-tag">Recommended: {target}{unit}</span>
+        </div>
+        <div className="progress-bar-container">
+          <motion.div 
+            className="progress-bar-fill"
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
+            style={{ backgroundColor: color }}
+          />
+        </div>
+        <div className="goal-controls">
+          <button onClick={() => onUpdate(goalKey, -10)} className="control-btn minus-btn"><FaMinus /></button>
+          <span className="current-value">{current}{unit}</span>
+          <button onClick={() => onUpdate(goalKey, 10)} className="control-btn plus-btn"><FaPlus /></button>
+        </div>
+        <div className="percentage-complete">
+          {percentage >= 100 ? '🎉 Goal Met!' : `${percentage.toFixed(0)}% Complete`}
+        </div>
+      </motion.div>
+    );
+  };
+
+  const TodayGoals = () => (
+    <motion.div 
+      className="today-goals-section"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.4 }}
+    >
+      <h3 className="section-title">🎯 Today's Goals</h3>
+      <div className="goals-grid">
+        {Object.entries(progressData.dailyGoals).map(([key, goal]) => (
+          <GoalProgressBar
+            key={key}
+            goalKey={key}
+            label={`🔥 ${key.charAt(0).toUpperCase() + key.slice(1)}`}
+            current={goal.current}
+            target={goal.target}
+            unit={goal.unit}
+            color={goal.color}
+            onUpdate={handleGoalChange}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
 
   const ProgressBar = ({ current, target, label, color, unit = '' }) => {
     const percentage = Math.min((current / target) * 100, 100);
@@ -304,6 +387,9 @@ const ProgressTracker = ({ healthProfile }) => {
         <span style={{ fontSize: '1.5rem' }}>📊</span>
         <h2 style={{ margin: 0, color: '#1f2937' }}>Progress Tracker</h2>
       </div>
+
+      {/* Today's Goals Section */}
+      <TodayGoals />
 
       {/* BMI Over Time - Line Chart */}
       <motion.div 

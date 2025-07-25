@@ -861,7 +861,32 @@ export default function GeminiRecommend() {
           </div>
         </>
       )}
-      {activeMainTab === 'dashboard' && <UserDashboard user={user} />}
+      {activeMainTab === 'dashboard' && (
+        <UserDashboard 
+          user={user} 
+          loggedFoods={loggedFoods} 
+          onFoodAdded={(newFood) => {
+            // Add the new food to the logged foods state
+            const foodWithMetadata = {
+              ...newFood,
+              userId: user?.email || 'guest',
+              id: Date.now() // Simple ID generation
+            };
+            
+            setLoggedFoods(prev => [...prev, foodWithMetadata]);
+            
+            // Optionally save to backend
+            if (user?.email) {
+              axios.post('http://localhost:5000/api/food-logger', {
+                foods: [foodWithMetadata],
+                email: user.email
+              }).catch(error => {
+                console.error('Error saving food to backend:', error);
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

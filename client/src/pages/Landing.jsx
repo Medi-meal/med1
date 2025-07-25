@@ -308,7 +308,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
 
       {/* PRICING SECTION */}
       <section id="subscription" ref={subscriptionRef} className="landing-pricing fade-in" style={{ marginTop: 40 }}>
-        <h2 style={{ textAlign: 'center', color: '#0a2342', marginBottom: '1.5rem' }}>Choose Your Plan</h2>
+        <h2 style={{ textAlign: 'center', color: 'white', marginBottom: '1.5rem' }}>Choose Your Plan</h2>
         <div className="pricing-cards" style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <div className="pricing-card normal" style={{ background: '#fff', border: '2px solid #0a2342', borderRadius: 18, color: '#0a2342', boxShadow: '0 2px 12px #0a234211', transition: 'transform 0.2s, box-shadow 0.2s', minWidth: 260, maxWidth: 340, flex: '1 1 260px', textAlign: 'center' }}
             onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 8px 32px #0a234233'; }}
@@ -443,7 +443,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
 
       {/* SUPPORT SECTION */}
       <section id="support" ref={supportRef} className="support-section fade-in" style={{ margin: '3rem 0 2rem 0', padding: '2.5rem 0', borderRadius: 24, maxWidth: 1100, marginLeft: 'auto', marginRight: 'auto' }}>
-        <h2 style={{ textAlign: 'center', color: '#0a2342', marginBottom: 32 }}>🛟 Support Center</h2>
+        <h2 style={{ textAlign: 'center', color: 'white', marginBottom: 32 }}>🛟 Support Center</h2>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: '2rem', boxShadow: '0 4px 12px rgba(10,35,66,0.08)', borderTop: '4px solid #0a2342' }}>

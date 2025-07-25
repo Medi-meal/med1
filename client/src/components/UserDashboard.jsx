@@ -5,8 +5,10 @@ import 'react-circular-progressbar/dist/styles.css';
 import { ClipLoader } from 'react-spinners';
 import toast from 'react-hot-toast';
 import { useNotifications } from '../hooks/useNotifications';
+import { motion } from 'framer-motion';
+import { FaPlus } from 'react-icons/fa';
 
-const UserDashboard = ({ user }) => {
+const UserDashboard = ({ user, loggedFoods, onFoodAdded }) => {
   useNotifications();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -24,112 +26,154 @@ const UserDashboard = ({ user }) => {
     }
   });
 
-  // Generate real-time data
-  const generateRealTimeData = () => {
-    const currentDate = new Date();
-    const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  // Handle hash changes to navigate to correct tab
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.substring(1);
+      if (hash === 'food-logger' || hash === 'nutrition' || hash === 'meal-plan') {
+        setActiveTab('nutrition');
+      }
+    };
+
+    // Check initial hash
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
     
-    // Generate last 4 weeks of meal feedback trends
-    const mealFeedbackTrend = [];
-    for (let i = 3; i >= 0; i--) {
-      const weekDate = new Date(currentDate);
-      weekDate.setDate(weekDate.getDate() - (i * 7));
-      mealFeedbackTrend.push({
-        week: `Week ${4 - i}`,
-        date: weekDate.toLocaleDateString(),
-        positive: Math.floor(Math.random() * 10) + 15,
-        negative: Math.floor(Math.random() * 3) + 1,
-        neutral: Math.floor(Math.random() * 5) + 2
-      });
-    }
-
-    // Generate current week's daily nutrition
-    const dailyNutrition = weekDays.map(day => ({
-      day,
-      calories: Math.floor(Math.random() * 300) + 1800,
-      protein: Math.floor(Math.random() * 30) + 110,
-      carbs: Math.floor(Math.random() * 40) + 170,
-      fats: Math.floor(Math.random() * 15) + 60
-    }));
-
-    // Generate frequent foods with realistic data
-    const foodList = [
-      'Quinoa Salad', 'Grilled Chicken', 'Avocado Toast', 'Greek Yogurt',
-      'Salmon', 'Sweet Potato', 'Brown Rice', 'Spinach Smoothie',
-      'Oatmeal', 'Almonds', 'Blueberries', 'Broccoli'
-    ];
-    const frequentFoods = foodList.slice(0, 6).map((name, index) => ({
-      name,
-      count: Math.floor(Math.random() * 8) + 5,
-      color: ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'][index]
-    }));
-
-    // Generate weekly trends
-    const weeklyTrends = {
-      weight: [],
-      bmi: [],
-      calories: [],
-      steps: []
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
     };
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(currentDate);
-      date.setDate(date.getDate() - i);
-      
-      weeklyTrends.weight.push({
-        day: weekDays[6 - i],
-        value: 70 + Math.random() * 2 - 1, // Weight around 70kg with small variations
-        target: 68
-      });
-      
-      weeklyTrends.bmi.push({
-        day: weekDays[6 - i],
-        value: 23.5 + Math.random() * 0.5 - 0.25, // BMI around 23.5
-        target: 23
-      });
-      
-      weeklyTrends.calories.push({
-        day: weekDays[6 - i],
-        consumed: Math.floor(Math.random() * 300) + 1800,
-        burned: Math.floor(Math.random() * 200) + 2000,
-        target: 2000
-      });
-      
-      weeklyTrends.steps.push({
-        day: weekDays[6 - i],
-        count: Math.floor(Math.random() * 3000) + 7000,
-        target: 10000
-      });
-    }
-
-    return {
-      mealFeedbackTrend,
-      frequentFoods,
-      nutritionScore: Math.floor(Math.random() * 20) + 80, // Score between 80-100
-      weeklySummary: {
-        sleepHours: (Math.random() * 2 + 7).toFixed(1),
-        waterIntake: (Math.random() * 2 + 7).toFixed(1),
-        steps: Math.floor(Math.random() * 2000) + 8000,
-        caloriesBurned: Math.floor(Math.random() * 300) + 2000,
-        mealsLogged: Math.floor(Math.random() * 5) + 16,
-        workouts: Math.floor(Math.random() * 3) + 3
-      },
-      dailyNutrition,
-      weeklyTrends
-    };
-  };
+  }, []);
 
   useEffect(() => {
+    // Generate real-time data function
+    const generateRealTimeData = (foods) => {
+      // Mock nutritional data for foods
+      const MOCK_NUTRITION_DB = {
+        'Quinoa Salad': { calories: 350, protein: 15, carbs: 45, fats: 15 },
+        'Grilled Chicken': { calories: 220, protein: 40, carbs: 0, fats: 5 },
+        'Avocado Toast': { calories: 250, protein: 8, carbs: 25, fats: 15 },
+        'Greek Yogurt': { calories: 150, protein: 20, carbs: 10, fats: 4 },
+        'Salmon': { calories: 300, protein: 30, carbs: 0, fats: 20 },
+        'Sweet Potato': { calories: 180, protein: 4, carbs: 41, fats: 1 },
+        'Brown Rice': { calories: 215, protein: 5, carbs: 45, fats: 2 },
+        'Spinach Smoothie': { calories: 120, protein: 5, carbs: 20, fats: 2 },
+        'Oatmeal': { calories: 150, protein: 5, carbs: 27, fats: 3 },
+        'Almonds': { calories: 160, protein: 6, carbs: 6, fats: 14 },
+        'Blueberries': { calories: 85, protein: 1, carbs: 21, fats: 0.5 },
+        'Broccoli': { calories: 55, protein: 4, carbs: 11, fats: 1 },
+        // Add more mock data as needed
+      };
+
+      const currentDate = new Date();
+      const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      
+      // Generate last 4 weeks of meal feedback trends
+      const mealFeedbackTrend = [];
+      for (let i = 3; i >= 0; i--) {
+        const weekDate = new Date(currentDate);
+        weekDate.setDate(weekDate.getDate() - (i * 7));
+        mealFeedbackTrend.push({
+          week: `Week ${4 - i}`,
+          date: weekDate.toLocaleDateString(),
+          positive: Math.floor(Math.random() * 10) + 15,
+          negative: Math.floor(Math.random() * 3) + 1,
+          neutral: Math.floor(Math.random() * 5) + 2
+        });
+      }
+
+      // Generate current week's daily nutrition from logged foods
+      const dailyNutrition = weekDays.map(day => ({
+        day,
+        calories: 0, protein: 0, carbs: 0, fats: 0
+      }));
+
+      foods.forEach(food => {
+        const foodDate = new Date(food.timestamp);
+        const dayIndex = foodDate.getDay(); // Sunday - 0, Monday - 1, etc.
+        const nutrition = MOCK_NUTRITION_DB[food.food] || { calories: 100, protein: 10, carbs: 20, fats: 5 }; // Default if not in DB
+
+        dailyNutrition[dayIndex].calories += nutrition.calories;
+        dailyNutrition[dayIndex].protein += nutrition.protein;
+        dailyNutrition[dayIndex].carbs += nutrition.carbs;
+        dailyNutrition[dayIndex].fats += nutrition.fats;
+      });
+
+      // Generate frequent foods with realistic data
+      const foodList = [
+        'Quinoa Salad', 'Grilled Chicken', 'Avocado Toast', 'Greek Yogurt',
+        'Salmon', 'Sweet Potato', 'Brown Rice', 'Spinach Smoothie',
+        'Oatmeal', 'Almonds', 'Blueberries', 'Broccoli'
+      ];
+      const frequentFoods = foodList.slice(0, 6).map((name, index) => ({
+        name,
+        count: Math.floor(Math.random() * 8) + 5,
+        color: ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'][index]
+      }));
+
+      // Generate weekly trends
+      const weeklyTrends = {
+        weight: [],
+        bmi: [],
+        calories: [],
+        steps: []
+      };
+
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(currentDate);
+        date.setDate(date.getDate() - i);
+        
+        weeklyTrends.weight.push({
+          day: weekDays[6 - i],
+          value: 70 + Math.random() * 2 - 1, // Weight around 70kg with small variations
+          target: 68
+        });
+        
+        weeklyTrends.bmi.push({
+          day: weekDays[6 - i],
+          value: 23.5 + Math.random() * 0.5 - 0.25, // BMI around 23.5
+          target: 23
+        });
+        
+        weeklyTrends.calories.push({
+          day: weekDays[6 - i],
+          consumed: Math.floor(Math.random() * 300) + 1800,
+          burned: Math.floor(Math.random() * 200) + 2000,
+          target: 2000
+        });
+        
+        weeklyTrends.steps.push({
+          day: weekDays[6 - i],
+          count: Math.floor(Math.random() * 3000) + 7000,
+          target: 10000
+        });
+      }
+
+      return {
+        mealFeedbackTrend,
+        frequentFoods,
+        nutritionScore: Math.floor(Math.random() * 20) + 80, // Score between 80-100
+        weeklySummary: {
+          sleepHours: (Math.random() * 2 + 7).toFixed(1),
+          waterIntake: (Math.random() * 2 + 7).toFixed(1),
+          steps: Math.floor(Math.random() * 2000) + 8000,
+          caloriesBurned: Math.floor(Math.random() * 300) + 2000,
+          mealsLogged: Math.floor(Math.random() * 5) + 16,
+          workouts: Math.floor(Math.random() * 3) + 3
+        },
+        dailyNutrition,
+        weeklyTrends
+      };
+    };
+
     // Simulate API calls and generate real-time data
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Generate fresh data
-        const newData = generateRealTimeData();
+        // Generate fresh data based on loggedFoods
+        const newData = generateRealTimeData(loggedFoods);
         setDashboardData(newData);
         
         setLoading(false);
@@ -143,15 +187,8 @@ const UserDashboard = ({ user }) => {
 
     fetchData();
     
-    // Update data every 30 seconds for real-time effect
-    const interval = setInterval(() => {
-      const newData = generateRealTimeData();
-      setDashboardData(newData);
-      toast.success('🔄 Data refreshed automatically');
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
+    // Update data when loggedFoods changes
+  }, [loggedFoods]);
 
   const LoadingSkeleton = () => (
     <div style={{
@@ -174,10 +211,7 @@ const UserDashboard = ({ user }) => {
   );
 
   const SummaryCard = ({ icon, title, value, unit, color, trend }) => (
-    <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.3 }}
+    <div
       style={{
         background: 'white',
         borderRadius: '12px',
@@ -225,7 +259,7 @@ const UserDashboard = ({ user }) => {
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -513,60 +547,97 @@ const UserDashboard = ({ user }) => {
         </div>
       </motion.div>
 
-      {/* Daily Nutrition Breakdown */}
-      {(activeTab === 'nutrition' || activeTab === 'trends') && (
+      {/* Unified Food Logger Tab */}
+      {activeTab === 'nutrition' && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '2rem',
-            marginBottom: '2rem',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-          }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>📈 Daily Nutrition Breakdown</h3>
-          <div style={{ height: '350px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dashboardData.dailyNutrition}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="calories" 
-                  stroke="#ef4444" 
-                  strokeWidth={3}
-                  dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="protein" 
-                  stroke="#22c55e" 
-                  strokeWidth={3}
-                  dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="carbs" 
-                  stroke="#3b82f6" 
-                  strokeWidth={3}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="fats" 
-                  stroke="#f59e0b" 
-                  strokeWidth={3}
-                  dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {/* Food Logger Section */}
+          <motion.div
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>🍽️ Daily Food Logger</h3>
+            <FoodLoggerForm 
+              onFoodAdded={onFoodAdded || ((newFood) => {
+                console.log('New food added:', newFood);
+                toast.success(`Added ${newFood.name} to your ${newFood.mealType}!`);
+              })}
+            />
+          </motion.div>
+
+          {/* Today's Nutrition Summary */}
+          <motion.div
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>� Today's Nutrition Facts</h3>
+            <TodaysNutritionSummary loggedFoods={loggedFoods} />
+          </motion.div>
+
+          {/* Daily Nutrition Breakdown Chart */}
+          <motion.div
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>�📈 Daily Nutrition Breakdown</h3>
+            <div style={{ height: '350px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dashboardData.dailyNutrition}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="calories" 
+                    stroke="#ef4444" 
+                    strokeWidth={3}
+                    dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="protein" 
+                    stroke="#22c55e" 
+                    strokeWidth={3}
+                    dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="carbs" 
+                    stroke="#3b82f6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="fats" 
+                    stroke="#f59e0b" 
+                    strokeWidth={3}
+                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -717,19 +788,11 @@ const UserDashboard = ({ user }) => {
                   <Legend />
                   <Area 
                     type="monotone" 
-                    dataKey="count" 
-                    stroke="#3b82f6" 
-                    fill="#3b82f630"
-                    strokeWidth={3}
-                    name="Daily Steps"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="target" 
-                    stroke="#6b7280" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    name="Daily Target"
+                    dataKey="count"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
+                    fillOpacity={0.3}
+                    name="Steps"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -738,186 +801,315 @@ const UserDashboard = ({ user }) => {
         </motion.div>
       )}
 
-      {/* Analytics Tab */}
+      {/* Analytics Tab - placeholder for future analytics features */}
       {activeTab === 'analytics' && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
+          style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '3rem',
+            textAlign: 'center',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            marginBottom: '2rem'
+          }}
         >
-          {/* Meal Feedback Trend */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>📈 Meal Feedback Trends (Last 4 Weeks)</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={dashboardData.mealFeedbackTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="positive" 
-                  stackId="1" 
-                  stroke="#22c55e" 
-                  fill="#22c55e"
-                  name="Positive Feedback"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="neutral" 
-                  stackId="1" 
-                  stroke="#f59e0b" 
-                  fill="#f59e0b"
-                  name="Neutral Feedback"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="negative" 
-                  stackId="1" 
-                  stroke="#ef4444" 
-                  fill="#ef4444"
-                  name="Negative Feedback"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </motion.div>
-
-          {/* Food Frequency Chart */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>🥗 Most Frequently Consumed Foods</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={dashboardData.frequentFoods} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={120} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar 
-                  dataKey="count" 
-                  fill="#8884d8"
-                  name="Times Consumed"
-                  radius={[0, 4, 4, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📊</div>
+          <h3 style={{ color: '#374151', marginBottom: '1rem' }}>Advanced Analytics</h3>
+          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+            Detailed analytics and insights coming soon! This section will include advanced health metrics, 
+            predictive analysis, and personalized recommendations based on your food logging patterns.
+          </p>
+          <div style={{
+            background: '#f8fafc',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '600px',
+            margin: '0 auto'
+          }}>
+            <h4 style={{ color: '#374151', marginBottom: '1rem' }}>Coming Features:</h4>
+            <ul style={{ textAlign: 'left', color: '#6b7280', lineHeight: '1.8' }}>
+              <li>🎯 Personalized goal recommendations</li>
+              <li>📈 Predictive health trends</li>
+              <li>🔄 Habit formation tracking</li>
+              <li>🏆 Achievement system</li>
+              <li>📊 Comparative analysis</li>
+            </ul>
+          </div>
         </motion.div>
       )}
+    </motion.div>
+  );
+};
 
-      {/* Quick Actions (Always visible) */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
+// Unified Food Logger Components
+const FoodLoggerForm = ({ onFoodAdded }) => {
+  const [selectedFood, setSelectedFood] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [mealType, setMealType] = useState('breakfast');
+
+  // Food database with nutritional information
+  const foodDatabase = {
+    'apple': { name: 'Apple', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4 },
+    'banana': { name: 'Banana', calories: 96, protein: 1.2, carbs: 24, fat: 0.2, fiber: 2.6 },
+    'chicken_breast': { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0 },
+    'rice': { name: 'White Rice (1 cup)', calories: 205, protein: 4.3, carbs: 45, fat: 0.4, fiber: 0.6 },
+    'broccoli': { name: 'Broccoli (1 cup)', calories: 25, protein: 3, carbs: 5, fat: 0.3, fiber: 2.3 },
+    'salmon': { name: 'Salmon (100g)', calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0 },
+    'quinoa': { name: 'Quinoa (1 cup)', calories: 222, protein: 8, carbs: 39, fat: 3.6, fiber: 5.2 },
+    'spinach': { name: 'Spinach (1 cup)', calories: 7, protein: 0.9, carbs: 1.1, fat: 0.1, fiber: 0.7 },
+    'greek_yogurt': { name: 'Greek Yogurt (1 cup)', calories: 130, protein: 23, carbs: 9, fat: 0, fiber: 0 },
+    'almonds': { name: 'Almonds (1 oz)', calories: 164, protein: 6, carbs: 6, fat: 14, fiber: 3.5 },
+    'oatmeal': { name: 'Oatmeal (1 cup)', calories: 154, protein: 6, carbs: 28, fat: 3, fiber: 4 },
+    'sweet_potato': { name: 'Sweet Potato (1 medium)', calories: 112, protein: 2, carbs: 26, fat: 0.1, fiber: 3.9 }
+  };
+
+  const handleAddFood = () => {
+    if (!selectedFood || quantity <= 0) {
+      toast.error('Please select a food and valid quantity');
+      return;
+    }
+
+    const foodData = foodDatabase[selectedFood];
+    if (!foodData) {
+      toast.error('Food not found in database');
+      return;
+    }
+
+    const nutritionData = {
+      name: foodData.name,
+      quantity: quantity,
+      mealType: mealType,
+      calories: Math.round(foodData.calories * quantity),
+      protein: Math.round(foodData.protein * quantity * 10) / 10,
+      carbs: Math.round(foodData.carbs * quantity * 10) / 10,
+      fat: Math.round(foodData.fat * quantity * 10) / 10,
+      fiber: Math.round(foodData.fiber * quantity * 10) / 10,
+      timestamp: new Date().toISOString()
+    };
+
+    onFoodAdded(nutritionData);
+    
+    // Reset form
+    setSelectedFood('');
+    setQuantity(1);
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+          Select Food
+        </label>
+        <select
+          value={selectedFood}
+          onChange={(e) => setSelectedFood(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            background: 'white'
+          }}
+        >
+          <option value="">Choose a food...</option>
+          {Object.entries(foodDatabase).map(([key, food]) => (
+            <option key={key} value={key}>{food.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+          Quantity
+        </label>
+        <input
+          type="number"
+          min="0.1"
+          step="0.1"
+          value={quantity}
+          onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '1rem'
+          }}
+        />
+      </div>
+
+      <div>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+          Meal Type
+        </label>
+        <select
+          value={mealType}
+          onChange={(e) => setMealType(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            background: 'white'
+          }}
+        >
+          <option value="breakfast">🌅 Breakfast</option>
+          <option value="lunch">☀️ Lunch</option>
+          <option value="dinner">🌙 Dinner</option>
+          <option value="snack">🍪 Snack</option>
+        </select>
+      </div>
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleAddFood}
         style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '2rem',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          padding: '0.75rem 1.5rem',
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: '1rem',
+          fontWeight: '600',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          justifyContent: 'center'
         }}
       >
-        <h3 style={{ color: '#374151', marginBottom: '1.5rem' }}>⚡ Quick Actions</h3>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '1rem'
-        }}>
-          {[
-            { icon: '🍽️', title: 'Log Meal', color: '#22c55e' },
-            { icon: '💧', title: 'Add Water', color: '#3b82f6' },
-            { icon: '🏃‍♂️', title: 'Log Exercise', color: '#f59e0b' },
-            { icon: '😴', title: 'Track Sleep', color: '#8b5cf6' },
-            { icon: '📊', title: 'View Reports', color: '#ef4444' },
-            { icon: '🎯', title: 'Set Goals', color: '#06b6d4' }
-          ].map((action, index) => (
-            <motion.button
-              key={index}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toast.success(`${action.title} feature coming soon!`)}
-              style={{
-                background: `${action.color}15`,
-                border: `2px solid ${action.color}30`,
-                borderRadius: '12px',
-                padding: '1rem',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.2s ease',
-                minHeight: '80px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{action.icon}</div>
-              <div style={{ color: action.color, fontWeight: '600', fontSize: '0.875rem' }}>{action.title}</div>
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
+        <FaPlus /> Add Food
+      </motion.button>
+    </div>
+  );
+};
 
-      {/* Responsive Styles */}
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .navbar-content {
-            padding: 0.5rem 1rem;
-          }
-          
-          .grid-responsive {
-            grid-template-columns: 1fr;
-          }
-          
-          .tab-responsive {
-            flex-wrap: wrap;
-            gap: 0.5rem;
-          }
-          
-          .tab-responsive button {
-            min-width: auto;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-          }
-        }
-        
-        @media (max-width: 640px) {
-          .dashboard-container {
-            padding: 1rem;
-          }
-          
-          .chart-container {
-            height: 250px;
-          }
-          
-          .summary-cards {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-    </motion.div>
+const TodaysNutritionSummary = ({ loggedFoods }) => {
+  const todaysFoods = loggedFoods.filter(food => {
+    const foodDate = new Date(food.timestamp).toDateString();
+    const today = new Date().toDateString();
+    return foodDate === today;
+  });
+
+  const totals = todaysFoods.reduce((acc, food) => ({
+    calories: acc.calories + food.calories,
+    protein: acc.protein + food.protein,
+    carbs: acc.carbs + food.carbs,
+    fat: acc.fat + food.fat,
+    fiber: acc.fiber + food.fiber
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+
+  const mealBreakdown = todaysFoods.reduce((acc, food) => {
+    if (!acc[food.mealType]) {
+      acc[food.mealType] = { count: 0, calories: 0 };
+    }
+    acc[food.mealType].count++;
+    acc[food.mealType].calories += food.calories;
+    return acc;
+  }, {});
+
+  return (
+    <div>
+      {/* Total Nutrition Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ background: '#fef2f2', padding: '1rem', borderRadius: '12px', textAlign: 'center', border: '2px solid #fecaca' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>{Math.round(totals.calories)}</div>
+          <div style={{ fontSize: '0.875rem', color: '#7f1d1d', fontWeight: '600' }}>Calories</div>
+        </div>
+        <div style={{ background: '#f0fdf4', padding: '1rem', borderRadius: '12px', textAlign: 'center', border: '2px solid #bbf7d0' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#16a34a' }}>{Math.round(totals.protein)}g</div>
+          <div style={{ fontSize: '0.875rem', color: '#14532d', fontWeight: '600' }}>Protein</div>
+        </div>
+        <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '12px', textAlign: 'center', border: '2px solid #bfdbfe' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>{Math.round(totals.carbs)}g</div>
+          <div style={{ fontSize: '0.875rem', color: '#1e3a8a', fontWeight: '600' }}>Carbs</div>
+        </div>
+        <div style={{ background: '#fffbeb', padding: '1rem', borderRadius: '12px', textAlign: 'center', border: '2px solid #fed7aa' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#d97706' }}>{Math.round(totals.fat)}g</div>
+          <div style={{ fontSize: '0.875rem', color: '#92400e', fontWeight: '600' }}>Fat</div>
+        </div>
+        <div style={{ background: '#f5f3ff', padding: '1rem', borderRadius: '12px', textAlign: 'center', border: '2px solid #c4b5fd' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#7c3aed' }}>{Math.round(totals.fiber)}g</div>
+          <div style={{ fontSize: '0.875rem', color: '#4c1d95', fontWeight: '600' }}>Fiber</div>
+        </div>
+      </div>
+
+      {/* Meal Breakdown */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h4 style={{ color: '#374151', marginBottom: '1rem' }}>🍽️ Today's Meals</h4>
+        {Object.keys(mealBreakdown).length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+            {Object.entries(mealBreakdown).map(([mealType, data]) => (
+              <div key={mealType} style={{ 
+                background: '#f9fafb', 
+                padding: '1rem', 
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#374151', textTransform: 'capitalize' }}>
+                  {mealType}
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  {data.count} items • {Math.round(data.calories)} cal
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ 
+            padding: '2rem', 
+            textAlign: 'center', 
+            color: '#6b7280',
+            background: '#f9fafb',
+            borderRadius: '8px',
+            border: '2px dashed #e5e7eb'
+          }}>
+            No meals logged today. Start by adding your first food item above! 🍎
+          </div>
+        )}
+      </div>
+
+      {/* Recent Foods */}
+      {todaysFoods.length > 0 && (
+        <div>
+          <h4 style={{ color: '#374151', marginBottom: '1rem' }}>📋 Recent Foods</h4>
+          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            {todaysFoods.slice(-5).reverse().map((food, index) => (
+              <div key={index} style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                padding: '0.75rem',
+                marginBottom: '0.5rem',
+                background: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div>
+                  <div style={{ fontWeight: '600', color: '#374151' }}>{food.name}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                    {food.mealType} • Qty: {food.quantity}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: '600', color: '#dc2626' }}>{food.calories} cal</div>
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                    P: {food.protein}g C: {food.carbs}g F: {food.fat}g
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
