@@ -7,10 +7,10 @@ import UserDashboard from '../components/UserDashboard';
 const steps = [
   { name: 'age', label: 'Age', type: 'number', required: true },
   { name: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'], required: true },
-  { name: 'foodType', label: 'Food Type', type: 'select', options: ['veg', 'nonveg', 'vegan', 'both'], required: true },
+  { name: 'foodType', label: 'Food Type', type: 'select', options: ['veg', 'nonveg', 'vegan'], required: true },
   { name: 'weightHeightBmi', label: 'Weight, Height & BMI', type: 'bmi', required: false },
   { name: 'medication', label: 'Medication', type: 'text', required: true },
-  { name: 'disease', label: 'Disease', type: 'text', required: true },
+  { name: 'disease', label: 'Medical Condition', type: 'text', required: true },
 ];
 
 // Progress Indicator Component
@@ -86,8 +86,17 @@ function FormStep({ step, form, onChange, onCalculateBMI }) {
           Calculate BMI
         </button>
         {form.bmi && (
-          <div className="bmi-result">
-            BMI: {form.bmi}
+          <div className={`bmi-result ${
+            parseFloat(form.bmi) < 18.5 ? 'bmi-underweight' :
+            parseFloat(form.bmi) >= 18.5 && parseFloat(form.bmi) < 25 ? 'bmi-normal' :
+            parseFloat(form.bmi) >= 25 && parseFloat(form.bmi) < 30 ? 'bmi-overweight' : 'bmi-obese'
+          }`}>
+            BMI: {form.bmi} {' '}
+            <span className="bmi-category">
+              {parseFloat(form.bmi) < 18.5 ? '(Underweight)' :
+               parseFloat(form.bmi) >= 18.5 && parseFloat(form.bmi) < 25 ? '(Normal)' :
+               parseFloat(form.bmi) >= 25 && parseFloat(form.bmi) < 30 ? '(Overweight)' : '(Obese)'}
+            </span>
           </div>
         )}
       </div>
@@ -189,7 +198,29 @@ function MainTabs({ activeMainTab, setActiveMainTab }) {
 }
 
 // Enhanced Recommendation List Component
-function RecommendationList({ mealData, highlightedFood, userProfile }) {
+function RecommendationList({ mealData, highlightedFood, userProfile, onAddToFoodLogger, selectedMeal }) {
+  const [selectedFoods, setSelectedFoods] = useState([]);
+  
+  const handleCheckboxChange = (item, isChecked) => {
+    if (isChecked) {
+      setSelectedFoods(prev => [...prev, { ...item, mealType: selectedMeal }]);
+    } else {
+      setSelectedFoods(prev => prev.filter(food => food.food !== item.food));
+    }
+  };
+  
+  const handleAddToFoodLogger = () => {
+    if (selectedFoods.length > 0) {
+      onAddToFoodLogger(selectedFoods);
+      setSelectedFoods([]);
+      // Reset all checkboxes
+      const checkboxes = document.querySelectorAll('.food-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+      });
+    }
+  };
+  
   return (
     <div className="meal-output">
       {userProfile && (
@@ -207,9 +238,24 @@ function RecommendationList({ mealData, highlightedFood, userProfile }) {
       )}
       
       <h4>Recommended Foods</h4>
+      {selectedFoods.length > 0 && (
+        <div className="add-to-logger">
+          <button 
+            className="add-to-logger-btn"
+            onClick={handleAddToFoodLogger}
+          >
+            Add {selectedFoods.length} item{selectedFoods.length > 1 ? 's' : ''} to Food Logger
+          </button>
+        </div>
+      )}
       <ul className="food-list">
         {mealData?.recommended?.map((item, idx) => (
           <li key={idx} className="food-item">
+            <input 
+              type="checkbox" 
+              className="food-checkbox"
+              onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+            />
             <span className="food-name">{item.food}</span>
             <span className="quantity">{item.quantity}</span>
           </li>
@@ -295,6 +341,8 @@ export default function GeminiRecommend() {
   const [foodCheckLoading, setFoodCheckLoading] = useState(false);
   const [highlightedFood, setHighlightedFood] = useState('');
   const [activeMainTab, setActiveMainTab] = useState('recommendations');
+  const [loggedFoods, setLoggedFoods] = useState([]);
+  const [healthProfile, setHealthProfile] = useState(null);
   const user = JSON.parse(localStorage.getItem('medimeal_user'));
 
   // Handle URL fragment for direct navigation
@@ -331,16 +379,62 @@ export default function GeminiRecommend() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Load saved user input
+  // Load saved user input and health profile
   useEffect(() => {
     if (user && user.email) {
       axios.get(`http://localhost:5000/api/user-input?email=${encodeURIComponent(user.email)}`)
         .then(res => {
-          if (res.data.input) setForm(f => ({ ...f, ...res.data.input }));
+          if (res.data.input) {
+            setForm(f => ({ ...f, ...res.data.input }));
+            setHealthProfile(res.data.input); // Store health profile
+          }
         })
         .catch(() => console.log('No saved input found'));
+        
+      // Also fetch any logged foods if you have a food logging API
+      axios.get(`http://localhost:5000/api/food-logger?email=${encodeURIComponent(user.email)}`)
+        .then(res => {
+          if (res.data.foods) setLoggedFoods(res.data.foods);
+        })
+        .catch(() => console.log('No logged foods found'));
     }
   }, [user]);
+  
+  // Function to handle adding foods to the food logger
+  const handleAddToFoodLogger = (selectedFoods) => {
+    if (!user || !user.email) {
+      alert('Please log in to add foods to your food logger');
+      return;
+    }
+    
+    const foodsWithTimestamp = selectedFoods.map(food => ({
+      ...food,
+      timestamp: new Date().toISOString(),
+      userId: user.email
+    }));
+    
+    setLoggedFoods(prev => [...prev, ...foodsWithTimestamp]);
+    
+    // Save to backend if you have an API for food logging
+    axios.post('http://localhost:5000/api/food-logger', {
+      foods: foodsWithTimestamp,
+      email: user.email
+    })
+    .then(res => {
+      alert(`${selectedFoods.length} item${selectedFoods.length > 1 ? 's' : ''} added to your food logger!`);
+      // If user is not already in the food logger tab, ask if they want to go there
+      if (activeMainTab !== 'dashboard') {
+        if (confirm('Would you like to go to the Food Logger now?')) {
+          setActiveMainTab('dashboard');
+          window.location.hash = 'food-logger';
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Error saving foods to logger:', err);
+      alert('Failed to save foods to your logger. Please try again.');
+    });
+  };
 
   // Set initial meal selection
   useEffect(() => {
@@ -391,7 +485,7 @@ export default function GeminiRecommend() {
         gender: form.gender,
         foodType: form.foodType,
         medication: form.medication,
-        disease: form.disease,
+        disease: form.disease, // Backend still expects 'disease' field
         bmi: form.bmi || null,
         weight: form.weight ? parseFloat(form.weight) : null,
         height: form.height ? parseFloat(form.height) : null,
@@ -599,6 +693,8 @@ export default function GeminiRecommend() {
                   mealData={result[selectedMeal.toLowerCase()]} 
                   highlightedFood={highlightedFood}
                   userProfile={result.userProfile}
+                  onAddToFoodLogger={handleAddToFoodLogger}
+                  selectedMeal={selectedMeal.toLowerCase()}
                 />
               ) : (
                 <div className="no-recommendations">
@@ -618,7 +714,153 @@ export default function GeminiRecommend() {
         </>
       )}
 
-      {activeMainTab === 'progress' && <ProgressTracker />}
+      {activeMainTab === 'progress' && (
+        <>
+          <ProgressTracker healthProfile={healthProfile} />
+          <div className="health-profile-section">
+            <h2>My Health Profile</h2>
+            <p>Update your health information to receive more accurate recommendations.</p>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              // Save health profile to the backend
+              axios.post('http://localhost:5000/api/user-input', {
+                input: form,
+                email: user?.email
+              })
+              .then(() => {
+                alert('Health profile updated successfully!');
+                setHealthProfile({...form});
+              })
+              .catch(err => {
+                console.error('Error saving health profile:', err);
+                alert('Failed to save your health profile. Please try again.');
+              });
+            }} className="health-profile-form">
+              <div className="form-grid">
+                {/* Age */}
+                <div className="form-group">
+                  <label>Age</label>
+                  <input
+                    name="age"
+                    type="number"
+                    value={form.age}
+                    onChange={handleChange}
+                    className="form-input"
+                    min="1"
+                    max="120"
+                  />
+                </div>
+                
+                {/* Gender */}
+                <div className="form-group">
+                  <label>Gender</label>
+                  <select
+                    name="gender"
+                    value={form.gender}
+                    onChange={handleChange}
+                    className="form-select"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                
+                {/* Food Type */}
+                <div className="form-group">
+                  <label>Food Type</label>
+                  <select
+                    name="foodType"
+                    value={form.foodType}
+                    onChange={handleChange}
+                    className="form-select"
+                  >
+                    <option value="">Select Food Type</option>
+                    <option value="veg">Vegetarian</option>
+                    <option value="nonveg">Non-Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                  </select>
+                </div>
+                
+                {/* Weight */}
+                <div className="form-group">
+                  <label>Weight (kg)</label>
+                  <input
+                    name="weight"
+                    type="number"
+                    value={form.weight}
+                    onChange={handleChange}
+                    className="form-input"
+                    step="0.1"
+                  />
+                </div>
+                
+                {/* Height */}
+                <div className="form-group">
+                  <label>Height (cm)</label>
+                  <input
+                    name="height"
+                    type="number"
+                    value={form.height}
+                    onChange={handleChange}
+                    className="form-input"
+                    step="0.1"
+                  />
+                </div>
+                
+                {/* BMI */}
+                <div className="form-group">
+                  <label>BMI</label>
+                  <div className="bmi-inputs">
+                    <input
+                      name="bmi"
+                      type="text"
+                      value={form.bmi}
+                      readOnly
+                      className="form-input"
+                    />
+                    <button type="button" onClick={handleCalculateBMI} className="bmi-button">
+                      Calculate
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Medication */}
+                <div className="form-group">
+                  <label>Medication</label>
+                  <input
+                    name="medication"
+                    type="text"
+                    value={form.medication}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="Enter your medications"
+                  />
+                </div>
+                
+                {/* Medical Condition */}
+                <div className="form-group">
+                  <label>Medical Condition</label>
+                  <input
+                    name="disease"
+                    type="text"
+                    value={form.disease}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="Enter your medical conditions"
+                  />
+                </div>
+              </div>
+              
+              <button type="submit" className="btn btn-primary">
+                Save Health Profile
+              </button>
+            </form>
+          </div>
+        </>
+      )}
       {activeMainTab === 'dashboard' && <UserDashboard user={user} />}
     </div>
   );

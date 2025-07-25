@@ -8,10 +8,10 @@ import '../styles/calendar-heatmap.css';
 import { ClipLoader } from 'react-spinners';
 import toast from 'react-hot-toast';
 
-const ProgressTracker = () => {
+const ProgressTracker = ({ healthProfile }) => {
   useNotifications();
   const [loading, setLoading] = useState(true);
-  const [progressData] = useState({
+  const [progressData, setProgressData] = useState({
     weeklyGoals: {
       mealsLogged: { current: 12, target: 21, percentage: 57 },
       waterIntake: { current: 6, target: 8, percentage: 75 },
@@ -56,6 +56,61 @@ const ProgressTracker = () => {
       { icon: '🔥', title: 'Streak Champion', description: 'Maintain 14-day streak', unlocked: false }
     ]
   });
+
+  // Update BMI history and recommended calories when healthProfile changes
+  useEffect(() => {
+    if (healthProfile) {
+      // Update BMI
+      if (healthProfile.bmi) {
+        const newBmiEntry = { month: 'Current', bmi: parseFloat(healthProfile.bmi) };
+        setProgressData(prevData => {
+          const existingHistory = prevData.bmiHistory.filter(entry => entry.month !== 'Current');
+          return {
+            ...prevData,
+            bmiHistory: [...existingHistory, newBmiEntry]
+          };
+        });
+      }
+
+      // Update recommended calories and macronutrients based on BMR (Mifflin-St Jeor Equation)
+      const { weight, height, age, gender } = healthProfile;
+      let recommendedCalories = 2000; // Default value
+
+      if (weight && height && age && gender) {
+        const weightKg = parseFloat(weight);
+        const heightCm = parseFloat(height);
+        const ageYears = parseInt(age);
+
+        if (gender.toLowerCase() === 'male') {
+          recommendedCalories = (10 * weightKg) + (6.25 * heightCm) - (5 * ageYears) + 5;
+        } else if (gender.toLowerCase() === 'female') {
+          recommendedCalories = (10 * weightKg) + (6.25 * heightCm) - (5 * ageYears) - 161;
+        } else { // For 'Other' or unspecified, we can use an average
+          const bmrMale = (10 * weightKg) + (6.25 * heightCm) - (5 * ageYears) + 5;
+          const bmrFemale = (10 * weightKg) + (6.25 * heightCm) - (5 * ageYears) - 161;
+          recommendedCalories = (bmrMale + bmrFemale) / 2;
+        }
+      }
+      
+      // Calculate macronutrients based on recommended calories
+      const carbsGrams = Math.round((recommendedCalories * 0.5) / 4);
+      const proteinsGrams = Math.round((recommendedCalories * 0.2) / 4);
+      const fatsGrams = Math.round((recommendedCalories * 0.3) / 9);
+
+      setProgressData(prevData => ({
+        ...prevData,
+        calorieData: prevData.calorieData.map(dayData => ({
+          ...dayData,
+          recommended: Math.round(recommendedCalories)
+        })),
+        macronutrients: [
+          { name: 'Carbs', value: carbsGrams, color: '#8884d8' },
+          { name: 'Proteins', value: proteinsGrams, color: '#82ca9d' },
+          { name: 'Fats', value: fatsGrams, color: '#ffc658' }
+        ]
+      }));
+    }
+  }, [healthProfile]);
 
   // Simulate data loading
   useEffect(() => {
@@ -336,7 +391,7 @@ const ProgressTracker = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, value }) => `${name}: ${value}g`}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"

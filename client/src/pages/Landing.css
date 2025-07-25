@@ -808,3 +808,8 @@
   border: 2px solid #22c55e;
   outline: none;
 }
+
+.contact-form input,
+.contact-form textarea {
+  color: #000;
+}

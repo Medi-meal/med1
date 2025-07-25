@@ -45,18 +45,18 @@ export default function Navbar(props) {
 
     switch (action) {
       case 'recommendations':
-        navigate('/recommend#recommendations');
+        navigate('/gemini-recommend#recommendations');
         break;
       case 'analytics':
-        navigate('/recommend');
+        navigate('/gemini-recommend');
         window.location.hash = '#dashboard';
         break;
       case 'progress':
-        navigate('/recommend');
+        navigate('/gemini-recommend');
         window.location.hash = '#progress';
         break;
       case 'food-logger':
-        navigate('/recommend');
+        navigate('/gemini-recommend');
         window.location.hash = '#food-logger';
         break;
       case 'profile':
@@ -64,6 +64,14 @@ export default function Navbar(props) {
         break;
       default:
         break;
+    }
+  };
+
+  const handleHomeClick = () => {
+    if (window.location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
     }
   };
 
@@ -113,7 +121,7 @@ export default function Navbar(props) {
         <div className="navbar-content">
           <div className="navbar-left">
             <Link to="/" className="navbar-logo">Medimeal</Link>
-            <Link to="/" className="navbar-link">Home</Link>
+            <a onClick={handleHomeClick} className="navbar-link" style={{cursor: 'pointer'}}>Home</a>
             {props.onAboutClick && (
               <button className="navbar-link" onClick={props.onAboutClick}>About</button>
             )}

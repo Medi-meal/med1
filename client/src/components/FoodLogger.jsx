@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNotifications } from '../hooks/useNotifications';
 
 const FoodLogger = ({ user }) => {
   const [loggedMeals, setLoggedMeals] = useState([]);
+  const [foodLogs, setFoodLogs] = useState([]);
   const [currentMeal, setCurrentMeal] = useState({
     type: 'breakfast',
     foods: [],
@@ -10,7 +12,26 @@ const FoodLogger = ({ user }) => {
     notes: ''
   });
   const [foodInput, setFoodInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useNotifications();
+  
+  // Fetch food logs from the API when component mounts
+  useEffect(() => {
+    if (user && user.email) {
+      setLoading(true);
+      axios.get(`http://localhost:5000/api/food-logger?email=${encodeURIComponent(user.email)}`)
+        .then(res => {
+          if (res.data.success && res.data.foods) {
+            setFoodLogs(res.data.foods);
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching food logs:', err);
+          setLoading(false);
+        });
+    }
+  }, [user]);
 
   // Sample food database
   const foodDatabase = [

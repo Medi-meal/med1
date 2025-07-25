@@ -49,10 +49,10 @@ const Landing = ({ showAbout, setShowAbout }) => {
   const handleGetStarted = () => {
     if (user && user.email) {
       // User is signed in, navigate to recommendations
-      navigate('/recommend#recommendations');
+      navigate('/gemini-recommend');
     } else {
-      // User is not signed in, navigate to signup
-      navigate('/signup');
+      // User is not signed in, navigate to login
+      navigate('/login');
     }
   };
   const [openFaq, setOpenFaq] = useState(null);
@@ -154,7 +154,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
             <span style={{ fontSize: '1.18rem', color: '#c7d2e6', maxWidth: 600, textShadow: '0 1px 6px #0a234288' }}>
               Discover a new way to eat healthy, delicious meals tailored to your unique health needs. Let Medimeal's AI guide you to a happier, healthier you!
             </span>
-            <button className="landing-cta" style={{ marginTop: '2.2rem', padding: '1rem 2.5rem', fontSize: '1.15rem', borderRadius: 30, background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', color: '#fff', fontWeight: 600, border: 'none', boxShadow: '0 2px 8px rgba(10,35,66,0.10)' }} onClick={() => navigate('/signup')}>Get Started</button>
+            <button className="landing-cta" style={{ marginTop: '2.2rem', padding: '1rem 2.5rem', fontSize: '1.15rem', borderRadius: 30, background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', color: '#fff', fontWeight: 600, border: 'none', boxShadow: '0 2px 8px rgba(10,35,66,0.10)' }} onClick={handleGetStarted}>Get Started</button>
           </div>
         </div>
       </header>
@@ -300,14 +300,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
         <h2 style={{ color: 'white', marginBottom: 18 }}>Ready to get your personalized meal plan?</h2>
         <button
           style={{ padding: '1rem 2.5rem', fontSize: '1.15rem', borderRadius: 30, background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', color: '#fff', fontWeight: 600, border: 'none', boxShadow: '0 2px 8px rgba(10,35,66,0.10)' }}
-          onClick={() => {
-            const user = JSON.parse(localStorage.getItem('medimeal_user'));
-            if (user && user.email) {
-              navigate('/recommend');
-            } else {
-              navigate('/login');
-            }
-          }}
+          onClick={handleGetStarted}
         >
           Get Started
         </button>
@@ -330,7 +323,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
               <li style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}><span style={{ color: '#0a2342', fontSize: 18, marginRight: 8 }}>✔</span>Instant access to meal plans</li>
             </ul>
             <div className="pricing-price" style={{ color: '#0a2342', fontWeight: 700, fontSize: '1.2rem', marginBottom: 12 }}>Free</div>
-            <button className="pricing-btn" style={{ background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', color: '#fff', borderRadius: 25, fontWeight: 600, fontSize: '1.1rem', padding: '0.7rem 2.2rem', marginTop: 8, border: 'none', cursor: 'pointer', transition: 'background 0.2s, transform 0.2s' }} onClick={() => navigate('/signup')}>Start Free</button>
+            <button className="pricing-btn" style={{ background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', color: '#fff', borderRadius: 25, fontWeight: 600, fontSize: '1.1rem', padding: '0.7rem 2.2rem', marginTop: 8, border: 'none', cursor: 'pointer', transition: 'background 0.2s, transform 0.2s' }} onClick={handleGetStarted}>Start Free</button>
           </div>
           <div className="pricing-card premium best-value" style={{ background: '#fff', border: '2px solid #274472', borderRadius: 18, color: '#274472', boxShadow: '0 2px 12px #27447211', transition: 'transform 0.2s, box-shadow 0.2s', minWidth: 260, maxWidth: 340, flex: '1 1 260px', textAlign: 'center' }}
             onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 8px 32px #27447233'; }}
@@ -390,7 +383,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
                 placeholder="Your Name" 
                 value={contactForm.name}
                 onChange={(e) => handleContactFormChange('name', e.target.value)}
-                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff' }}
+                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff', color: '#000' }}
                 required
               />
               <input 
@@ -398,7 +391,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
                 placeholder="Your Email" 
                 value={contactForm.email}
                 onChange={(e) => handleContactFormChange('email', e.target.value)}
-                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff' }}
+                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff', color: '#000' }}
                 required
               />
             </div>
@@ -407,14 +400,14 @@ const Landing = ({ showAbout, setShowAbout }) => {
               placeholder="Subject" 
               value={contactForm.subject}
               onChange={(e) => handleContactFormChange('subject', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff' }}
+              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff', color: '#000' }}
             />
             <textarea 
               placeholder="Your Message" 
               rows="4"
               value={contactForm.message}
               onChange={(e) => handleContactFormChange('message', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', resize: 'vertical', backgroundColor: '#fff' }}
+              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', resize: 'vertical', backgroundColor: '#fff', color: '#000' }}
               required
             ></textarea>
             <button 

@@ -18,7 +18,7 @@ export default function Signup() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('medimeal_user'));
     if (user && user.email) {
-      navigate('/recommend');
+      navigate('/gemini-recommend#recommendations');
     }
   }, [navigate]);
 
@@ -34,7 +34,7 @@ export default function Signup() {
       setMsg(res.data.message);
       if (res.data.message && res.data.message.toLowerCase().includes('signup successful')) {
         localStorage.setItem('medimeal_user', JSON.stringify({ name, email }));
-        setTimeout(() => navigate('/'), 1000);
+        setTimeout(() => navigate('/gemini-recommend#recommendations'), 1000);
       }
     } catch (err) {
       setMsg(err.response?.data?.message || 'Signup failed');
@@ -170,7 +170,7 @@ export default function Signup() {
                       if (data.email) {
                         localStorage.setItem('medimeal_user', JSON.stringify({ name: data.name, email: data.email }));
                         setMsg('Signup successful');
-                        setTimeout(() => navigate('/recommend'), 1000);
+                        setTimeout(() => navigate('/gemini-recommend#recommendations'), 1000);
                       } else {
                         setMsg('Google signup failed.');
                       }

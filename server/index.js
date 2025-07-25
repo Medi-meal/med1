@@ -10,6 +10,7 @@ const GOOGLE_CLIENT_ID = '772559724147-utfpmphmr81s84n2eao0fnl7likdp79r.apps.goo
 
 const User = require('./models/User');
 const UserInput = require('./models/UserInput');
+const FoodLog = require('./models/FoodLog');
 
 const app = express();
 app.use(cors());
@@ -295,6 +296,64 @@ app.post('/api/food-analysis', async (req, res) => {
     res.status(500).json({ 
       error: 'Failed to analyze food. Please try again later.' 
     });
+  }
+});
+
+// Food Logger Routes
+app.get('/api/food-logger', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const foodLogs = await FoodLog.find({ userId: email }).sort({ date: -1 });
+    res.json({ success: true, foods: foodLogs });
+  } catch (error) {
+    console.error('Error fetching food logs:', error);
+    res.status(500).json({ error: 'Failed to fetch food logs' });
+  }
+});
+
+// Add new food logs
+app.post('/api/food-logger', async (req, res) => {
+  try {
+    const { foods, email } = req.body;
+    
+    if (!foods || !foods.length || !email) {
+      return res.status(400).json({ error: 'Foods and email are required' });
+    }
+
+    // Check if there's an entry for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let foodLog = await FoodLog.findOne({
+      userId: email,
+      date: {
+        $gte: today,
+        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      }
+    });
+
+    if (foodLog) {
+      // Add new foods to existing log
+      foodLog.foods.push(...foods);
+      await foodLog.save();
+    } else {
+      // Create new log for today
+      foodLog = new FoodLog({
+        userId: email,
+        foods: foods,
+        date: new Date()
+      });
+      await foodLog.save();
+    }
+
+    res.json({ success: true, message: 'Foods logged successfully', foodLog });
+  } catch (error) {
+    console.error('Error saving food logs:', error);
+    res.status(500).json({ error: 'Failed to save food logs' });
   }
 });
 
