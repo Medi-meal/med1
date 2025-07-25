@@ -7,6 +7,7 @@ import PersonalizedDashboard from '../components/PersonalizedDashboard';
 import ProgressTracker from '../components/ProgressTracker';
 import InteractiveVisualizations from '../components/InteractiveVisualizations';
 import FoodLogger from '../components/FoodLogger';
+import MealSync from '../components/MealSync';
 import EnhancedUserProfile from '../components/EnhancedUserProfile';
 import UserDashboard from '../components/UserDashboard';
 
@@ -89,6 +90,7 @@ export default function UserProfile() {
     { id: 'progress', label: 'Progress Tracker', icon: '📈' },
     { id: 'visualizations', label: 'Data Charts', icon: '📊' },
     { id: 'foodlogger', label: 'Food Logger', icon: '🍽️' },
+    { id: 'mealsync', label: 'Meal Sync', icon: '🔄' },
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'tracker', label: 'Meal Tracker', icon: '🍽️' },
     { id: 'analyzer', label: 'Food Analyzer', icon: '🔍' },
@@ -186,6 +188,8 @@ export default function UserProfile() {
         return <InteractiveVisualizations user={user} healthProfile={healthProfile} stats={stats} />;
       case 'foodlogger':
         return <FoodLogger user={user} />;
+      case 'mealsync':
+        return <MealSync user={user} />;
       case 'profile':
         return (
           <EnhancedUserProfile 

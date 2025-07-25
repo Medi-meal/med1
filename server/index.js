@@ -357,4 +357,238 @@ app.post('/api/food-logger', async (req, res) => {
   }
 });
 
+// Add recommended food to actual meals
+app.post('/api/add-recommended-food', async (req, res) => {
+  try {
+    const { email, food, mealType, nutritionData } = req.body;
+    
+    if (!email || !food || !mealType) {
+      return res.status(400).json({ error: 'Email, food, and mealType are required' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Find or create today's food log
+    let foodLog = await FoodLog.findOne({
+      userId: email,
+      date: {
+        $gte: today,
+        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      }
+    });
+
+    const newFood = {
+      food: food,
+      mealType: mealType,
+      calories: nutritionData?.calories || 0,
+      protein: nutritionData?.protein || 0,
+      carbs: nutritionData?.carbs || 0,
+      fat: nutritionData?.fat || 0,
+      fiber: nutritionData?.fiber || 0,
+      isRecommended: true,
+      source: 'recommendation',
+      timestamp: new Date()
+    };
+
+    if (foodLog) {
+      foodLog.foods.push(newFood);
+      await foodLog.save();
+    } else {
+      foodLog = new FoodLog({
+        userId: email,
+        foods: [newFood],
+        date: new Date()
+      });
+      await foodLog.save();
+    }
+
+    // Update the user's recommendations to mark this food as taken
+    const userInput = await UserInput.findOne({ email });
+    if (userInput && userInput.recommendations && userInput.recommendations[mealType]) {
+      const foodIndex = userInput.recommendations[mealType].foods.findIndex(f => f.name === food);
+      if (foodIndex !== -1) {
+        userInput.recommendations[mealType].foods[foodIndex].isTaken = true;
+        userInput.recommendations[mealType].foods[foodIndex].takenAt = new Date();
+        await userInput.save();
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Recommended food added to meals successfully',
+      foodLog 
+    });
+  } catch (error) {
+    console.error('Error adding recommended food:', error);
+    res.status(500).json({ error: 'Failed to add recommended food' });
+  }
+});
+
+// Get synchronized meal data (recommendations + actual intake)
+app.get('/api/meal-sync', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get today's food log
+    const foodLog = await FoodLog.findOne({
+      userId: email,
+      date: {
+        $gte: today,
+        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // Get current recommendations
+    const userInput = await UserInput.findOne({ email });
+    
+    const syncData = {
+      recommendations: userInput?.recommendations || {},
+      actualIntake: {
+        breakfast: [],
+        lunch: [],
+        dinner: [],
+        snack: []
+      },
+      totals: {
+        calories: foodLog?.totalCalories || 0,
+        protein: foodLog?.totalProtein || 0,
+        carbs: foodLog?.totalCarbs || 0,
+        fat: foodLog?.totalFat || 0,
+        fiber: foodLog?.totalFiber || 0
+      }
+    };
+
+    // Organize actual intake by meal type
+    if (foodLog && foodLog.foods) {
+      foodLog.foods.forEach(food => {
+        if (syncData.actualIntake[food.mealType]) {
+          syncData.actualIntake[food.mealType].push(food);
+        }
+      });
+    }
+
+    res.json({ success: true, data: syncData });
+  } catch (error) {
+    console.error('Error fetching meal sync data:', error);
+    res.status(500).json({ error: 'Failed to fetch meal sync data' });
+  }
+});
+
+// Update recommendation status
+app.put('/api/update-recommendation-status', async (req, res) => {
+  try {
+    const { email, mealType, foodName, isTaken } = req.body;
+    
+    if (!email || !mealType || !foodName) {
+      return res.status(400).json({ error: 'Email, mealType, and foodName are required' });
+    }
+
+    const userInput = await UserInput.findOne({ email });
+    if (!userInput || !userInput.recommendations || !userInput.recommendations[mealType]) {
+      return res.status(404).json({ error: 'Recommendations not found' });
+    }
+
+    const foodIndex = userInput.recommendations[mealType].foods.findIndex(f => f.name === foodName);
+    if (foodIndex === -1) {
+      return res.status(404).json({ error: 'Food not found in recommendations' });
+    }
+
+    userInput.recommendations[mealType].foods[foodIndex].isTaken = isTaken;
+    if (isTaken) {
+      userInput.recommendations[mealType].foods[foodIndex].takenAt = new Date();
+    } else {
+      userInput.recommendations[mealType].foods[foodIndex].takenAt = null;
+    }
+
+    await userInput.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Recommendation status updated successfully' 
+    });
+  } catch (error) {
+    console.error('Error updating recommendation status:', error);
+    res.status(500).json({ error: 'Failed to update recommendation status' });
+  }
+});
+
+// Bulk add multiple recommended foods
+app.post('/api/add-multiple-recommended-foods', async (req, res) => {
+  try {
+    const { email, foods } = req.body; // foods is array of {food, mealType, nutritionData}
+    
+    if (!email || !foods || !Array.isArray(foods)) {
+      return res.status(400).json({ error: 'Email and foods array are required' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Find or create today's food log
+    let foodLog = await FoodLog.findOne({
+      userId: email,
+      date: {
+        $gte: today,
+        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      }
+    });
+
+    const newFoods = foods.map(item => ({
+      food: item.food,
+      mealType: item.mealType,
+      calories: item.nutritionData?.calories || 0,
+      protein: item.nutritionData?.protein || 0,
+      carbs: item.nutritionData?.carbs || 0,
+      fat: item.nutritionData?.fat || 0,
+      fiber: item.nutritionData?.fiber || 0,
+      isRecommended: true,
+      source: 'recommendation',
+      timestamp: new Date()
+    }));
+
+    if (foodLog) {
+      foodLog.foods.push(...newFoods);
+      await foodLog.save();
+    } else {
+      foodLog = new FoodLog({
+        userId: email,
+        foods: newFoods,
+        date: new Date()
+      });
+      await foodLog.save();
+    }
+
+    // Update recommendations status for all foods
+    const userInput = await UserInput.findOne({ email });
+    if (userInput && userInput.recommendations) {
+      foods.forEach(item => {
+        if (userInput.recommendations[item.mealType]) {
+          const foodIndex = userInput.recommendations[item.mealType].foods.findIndex(f => f.name === item.food);
+          if (foodIndex !== -1) {
+            userInput.recommendations[item.mealType].foods[foodIndex].isTaken = true;
+            userInput.recommendations[item.mealType].foods[foodIndex].takenAt = new Date();
+          }
+        }
+      });
+      await userInput.save();
+    }
+
+    res.json({ 
+      success: true, 
+      message: `${foods.length} recommended foods added to meals successfully`,
+      foodLog 
+    });
+  } catch (error) {
+    console.error('Error adding multiple recommended foods:', error);
+    res.status(500).json({ error: 'Failed to add recommended foods' });
+  }
+});
+
 app.listen(5000, () => console.log('Server running on port 5000'));

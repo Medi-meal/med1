@@ -400,31 +400,51 @@ export default function GeminiRecommend() {
     }
   }, [user]);
   
-  // Function to handle adding foods to the food logger
+  // Function to handle adding foods to the food logger with sync support
   const handleAddToFoodLogger = (selectedFoods) => {
     if (!user || !user.email) {
       alert('Please log in to add foods to your food logger');
       return;
     }
     
-    const foodsWithTimestamp = selectedFoods.map(food => ({
-      ...food,
-      timestamp: new Date().toISOString(),
-      userId: user.email
+    // Transform foods to include nutritional data for sync
+    const foodsForSync = selectedFoods.map(food => ({
+      food: food.food || food.name,
+      mealType: selectedMeal,
+      nutritionData: {
+        calories: food.calories || 0,
+        protein: food.protein || 0,
+        carbs: food.carbs || 0,
+        fat: food.fat || 0,
+        fiber: food.fiber || 0
+      }
     }));
     
-    setLoggedFoods(prev => [...prev, ...foodsWithTimestamp]);
-    
-    // Save to backend if you have an API for food logging
-    axios.post('http://localhost:5000/api/food-logger', {
-      foods: foodsWithTimestamp,
+    // Use the new synchronized endpoint for multiple foods
+    axios.post('http://localhost:5000/api/add-multiple-recommended-foods', {
+      foods: foodsForSync,
       email: user.email
     })
-    .then(res => {
-      alert(`${selectedFoods.length} item${selectedFoods.length > 1 ? 's' : ''} added to your food logger!`);
+    .then(response => {
+      console.log('Foods successfully synchronized:', response.data);
+      
+      // Update local state for immediate UI feedback
+      const foodsWithTimestamp = selectedFoods.map(food => ({
+        ...food,
+        timestamp: new Date().toISOString(),
+        userId: user.email,
+        mealType: selectedMeal,
+        isRecommended: true,
+        source: 'recommendation'
+      }));
+      
+      setLoggedFoods(prev => [...prev, ...foodsWithTimestamp]);
+      
+      alert(`${selectedFoods.length} recommended item${selectedFoods.length > 1 ? 's' : ''} added to your food logger and synchronized!`);
+      
       // If user is not already in the food logger tab, ask if they want to go there
       if (activeMainTab !== 'dashboard') {
-        if (confirm('Would you like to go to the Food Logger now?')) {
+        if (confirm('Would you like to go to the Food Logger to see your updated meals?')) {
           setActiveMainTab('dashboard');
           window.location.hash = 'food-logger';
         }
