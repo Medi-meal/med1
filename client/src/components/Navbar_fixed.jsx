@@ -6,9 +6,7 @@ export default function Navbar(props) {
   const navigate = useNavigate();
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('medimeal_user')));
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showFloatingActions, setShowFloatingActions] = useState(false);
   const dropdownRef = useRef(null);
-  const floatingRef = useRef(null);
 
   // Update user state when localStorage changes
   useEffect(() => {
@@ -31,9 +29,6 @@ export default function Navbar(props) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
-      if (floatingRef.current && !floatingRef.current.contains(event.target)) {
-        setShowFloatingActions(false);
-      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -49,9 +44,8 @@ export default function Navbar(props) {
 
   const handleQuickAction = (action) => {
     setShowDropdown(false);
-    setShowFloatingActions(false);
     
-    if (!user && action !== 'guide' && action !== 'faq' && action !== 'contact' && action !== 'subscription') {
+    if (!user && action !== 'guide') {
       navigate('/login');
       return;
     }
@@ -116,40 +110,12 @@ export default function Navbar(props) {
         // Open user guide or help documentation
         window.open('https://github.com/Mounikakamasani/Medimeal/blob/main/README.md', '_blank');
         break;
-      case 'faq':
-        // Handle FAQ navigation
-        if (props.onFAQClick) {
-          props.onFAQClick();
-        } else {
-          // Default FAQ behavior - could navigate to FAQ page or show modal
-          navigate('/faq');
-        }
-        break;
-      case 'contact':
-        // Handle Contact & Support navigation
-        if (props.onContactClick) {
-          props.onContactClick();
-        } else {
-          // Default contact behavior
-          navigate('/contact');
-        }
-        break;
-      case 'subscription':
-        // Handle Subscription navigation
-        if (props.onSubscriptionClick) {
-          props.onSubscriptionClick();
-        } else {
-          // Default subscription behavior
-          navigate('/subscription');
-        }
-        break;
       default:
         break;
     }
   };
 
   return (
-    <>
     <nav className="navbar">
       <div className="navbar-content">
         <div className="navbar-left">
@@ -158,15 +124,6 @@ export default function Navbar(props) {
           {props.onAboutClick && (
             <button className="navbar-link" onClick={props.onAboutClick}>About</button>
           )}
-          <button className="navbar-link" onClick={() => handleQuickAction('faq')}>
-            FAQs
-          </button>
-          <button className="navbar-link" onClick={() => handleQuickAction('contact')}>
-            Contact & Support
-          </button>
-          <button className="navbar-link" onClick={() => handleQuickAction('subscription')}>
-            Subscription
-          </button>
           
           {/* Quick Actions Dropdown */}
           <div className="navbar-dropdown" ref={dropdownRef}>
@@ -285,24 +242,6 @@ export default function Navbar(props) {
                   >
                     📖 User Guide
                   </button>
-                  <button 
-                    className="dropdown-item"
-                    onClick={() => handleQuickAction('faq')}
-                  >
-                    ❓ FAQs
-                  </button>
-                  <button 
-                    className="dropdown-item"
-                    onClick={() => handleQuickAction('contact')}
-                  >
-                    📞 Contact & Support
-                  </button>
-                  <button 
-                    className="dropdown-item"
-                    onClick={() => handleQuickAction('subscription')}
-                  >
-                    💳 Subscription Plans
-                  </button>
                 </div>
               </div>
             )}
@@ -335,53 +274,5 @@ export default function Navbar(props) {
         </div>
       </div>
     </nav>
-
-    {/* Floating Quick Actions Button */}
-    <div className="floating-quick-actions" ref={floatingRef}>
-      <button 
-        className="floating-button"
-        onClick={() => setShowFloatingActions(!showFloatingActions)}
-        title="Quick Actions"
-      >
-        ⚡
-      </button>
-      {showFloatingActions && (
-        <div className="floating-dropdown">
-          <div className="floating-dropdown-section">
-            <button 
-              className="floating-dropdown-item"
-              onClick={() => handleQuickAction('recommendations')}
-            >
-              🤖 AI Recommendations
-            </button>
-            <button 
-              className="floating-dropdown-item"
-              onClick={() => handleQuickAction('analytics')}
-            >
-              📈 View Analytics
-            </button>
-            <button 
-              className="floating-dropdown-item"
-              onClick={() => handleQuickAction('progress')}
-            >
-              📊 Progress Tracker
-            </button>
-            <button 
-              className="floating-dropdown-item"
-              onClick={() => handleQuickAction('food-logger')}
-            >
-              📝 Food Logger
-            </button>
-            <button 
-              className="floating-dropdown-item"
-              onClick={() => handleQuickAction('profile')}
-            >
-              👤 My Profile
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-    </>
   );
 }
