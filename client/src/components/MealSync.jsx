@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Use environment variable for API URL
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 const MealSync = ({ user }) => {
   const [syncData, setSyncData] = useState({
     recommendations: {},
@@ -48,7 +51,7 @@ const MealSync = ({ user }) => {
   // Add single recommended food to actual intake
   const addRecommendedFood = async (food, mealType, nutritionData) => {
     try {
-      await axios.post('http://localhost:5000/api/add-recommended-food', {
+      await axios.post(`${API_URL}/api/add-recommended-food`, {
         email: user.email,
         food: food,
         mealType: mealType,
@@ -70,7 +73,7 @@ const MealSync = ({ user }) => {
       
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/meal-sync?email=${encodeURIComponent(user.email)}`);
+        const response = await axios.get(`${API_URL}/api/meal-sync?email=${encodeURIComponent(user.email)}`);
         if (response.data.success) {
           setSyncData(response.data.data);
         }

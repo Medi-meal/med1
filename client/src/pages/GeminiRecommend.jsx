@@ -4,6 +4,9 @@ import './GeminiRecommend.css';
 import ProgressTracker from '../components/ProgressTracker';
 import UserDashboard from '../components/UserDashboard';
 
+// Use environment variable for API URL
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 const steps = [
   { name: 'age', label: 'Age', type: 'number', required: true },
   { name: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'], required: true },
@@ -382,7 +385,7 @@ export default function GeminiRecommend() {
   // Load saved user input and health profile
   useEffect(() => {
     if (user && user.email) {
-      axios.get(`http://localhost:5000/api/user-input?email=${encodeURIComponent(user.email)}`)
+      axios.get(`${API_URL}/api/user-input?email=${encodeURIComponent(user.email)}`)
         .then(res => {
           if (res.data.input) {
             setForm(f => ({ ...f, ...res.data.input }));
@@ -392,7 +395,7 @@ export default function GeminiRecommend() {
         .catch(() => console.log('No saved input found'));
         
       // Also fetch any logged foods if you have a food logging API
-      axios.get(`http://localhost:5000/api/food-logger?email=${encodeURIComponent(user.email)}`)
+      axios.get(`${API_URL}/api/food-logger?email=${encodeURIComponent(user.email)}`)
         .then(res => {
           if (res.data.foods) setLoggedFoods(res.data.foods);
         })
@@ -421,7 +424,7 @@ export default function GeminiRecommend() {
     }));
     
     // Use the new synchronized endpoint for multiple foods
-    axios.post('http://localhost:5000/api/add-multiple-recommended-foods', {
+    axios.post(`${API_URL}/api/add-multiple-recommended-foods`, {
       foods: foodsForSync,
       email: user.email
     })
@@ -515,7 +518,7 @@ export default function GeminiRecommend() {
       console.log('Sending recommendation request:', requestData);
       
       // Call the correct Gemini API endpoint
-      const res = await axios.post('http://localhost:5000/api/gemini-recommend', requestData);
+      const res = await axios.post(`${API_URL}/api/gemini-recommend`, requestData);
       
       // Process and enhance the response
       const recommendationData = res.data;
@@ -536,10 +539,13 @@ export default function GeminiRecommend() {
       setResult(enhancedData);
       setSelectedMeal('breakfast');
       
+      // Redirect to recommendations tab after successful input
+      setActiveMainTab('recommendations');
+      
       // Save user input to database
       if (user && user.email) {
         try {
-          await axios.post('http://localhost:5000/api/user-input', {
+          await axios.post(`${API_URL}/api/user-input`, {
             email: user.email,
             input: requestData,
             recommendations: enhancedData
@@ -615,7 +621,7 @@ export default function GeminiRecommend() {
       };
       
       // Use the correct Gemini food check endpoint
-      const res = await axios.post('http://localhost:5000/api/gemini-food-check', requestData);
+      const res = await axios.post(`${API_URL}/api/gemini-food-check`, requestData);
       
       const warningMessage = res.data.warning || res.data.message || 'Food safety checked.';
       setFoodWarning(warningMessage);
@@ -744,13 +750,15 @@ export default function GeminiRecommend() {
             <form onSubmit={(e) => {
               e.preventDefault();
               // Save health profile to the backend
-              axios.post('http://localhost:5000/api/user-input', {
+              axios.post(`${API_URL}/api/user-input`, {
                 input: form,
                 email: user?.email
               })
               .then(() => {
                 alert('Health profile updated successfully!');
                 setHealthProfile({...form});
+                // Redirect to recommendations after profile update
+                setActiveMainTab('recommendations');
               })
               .catch(err => {
                 console.error('Error saving health profile:', err);
@@ -897,7 +905,7 @@ export default function GeminiRecommend() {
             
             // Optionally save to backend
             if (user?.email) {
-              axios.post('http://localhost:5000/api/food-logger', {
+              axios.post(`${API_URL}/api/food-logger`, {
                 foods: [foodWithMetadata],
                 email: user.email
               }).catch(error => {
