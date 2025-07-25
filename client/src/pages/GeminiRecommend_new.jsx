@@ -105,22 +105,7 @@ function FormStep({ step, form, onChange, onCalculateBMI }) {
         required={step.required}
         className="form-input"
         placeholder={`Enter your ${step.label.toLowerCase()}`}
-        min={step.name === 'age' ? 1 : undefined}
-        max={step.name === 'age' ? 120 : undefined}
       />
-      {step.name === 'age' && form[step.name] && (
-        <div className="age-validation">
-          {parseInt(form[step.name]) < 1 && (
-            <span className="validation-error">Age must be at least 1 year</span>
-          )}
-          {parseInt(form[step.name]) > 120 && (
-            <span className="validation-error">Age must be 120 years or less</span>
-          )}
-          {parseInt(form[step.name]) >= 1 && parseInt(form[step.name]) <= 120 && (
-            <span className="validation-success">✓ Valid age</span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -189,36 +174,17 @@ function MainTabs({ activeMainTab, setActiveMainTab }) {
 }
 
 // Enhanced Recommendation List Component
-function RecommendationList({ mealData, highlightedFood, userProfile }) {
+function RecommendationList({ mealData, highlightedFood }) {
   return (
     <div className="meal-output">
-      {userProfile && (
-        <div className="recommendation-header">
-          <h3>Personalized for You</h3>
-          <div className="user-profile-summary">
-            <span className="profile-tag">Age: {userProfile.age}</span>
-            <span className="profile-tag">Diet: {userProfile.foodType}</span>
-            <span className="profile-tag">Gender: {userProfile.gender}</span>
-            {userProfile.bmi && (
-              <span className="profile-tag">BMI: {userProfile.bmi}</span>
-            )}
-          </div>
-        </div>
-      )}
-      
       <h4>Recommended Foods</h4>
       <ul className="food-list">
         {mealData?.recommended?.map((item, idx) => (
           <li key={idx} className="food-item">
-            <span className="food-name">{item.food}</span>
+            <span>{item.food}</span>
             <span className="quantity">{item.quantity}</span>
           </li>
         ))}
-        {(!mealData?.recommended || mealData.recommended.length === 0) && (
-          <li className="food-item no-data">
-            <span>No specific recommendations available for this meal.</span>
-          </li>
-        )}
       </ul>
       
       <h4>Foods to Avoid</h4>
@@ -230,22 +196,16 @@ function RecommendationList({ mealData, highlightedFood, userProfile }) {
               food.toLowerCase().includes(highlightedFood) ? 'highlighted' : ''
             }`}
           >
-            <span className="food-name">{food}</span>
-            <span className="warning-icon">⚠️</span>
+            <span>{food}</span>
           </li>
         ))}
-        {(!mealData?.not_recommended || mealData.not_recommended.length === 0) && (
-          <li className="food-item no-data">
-            <span>No specific foods to avoid for this meal.</span>
-          </li>
-        )}
       </ul>
     </div>
   );
 }
 
 // Enhanced Food Check Form Component
-function FoodCheckForm({ foodQuery, setFoodQuery, foodWarning, foodCheckLoading, onCheckFood }) {
+function FoodCheckForm({ foodQuery, setFoodQuery, foodWarning, foodCheckLoading, foodSuggestions, setFoodSuggestions, onCheckFood }) {
   return (
     <div className="food-check-form">
       <h3>Check Food Safety</h3>
@@ -256,6 +216,7 @@ function FoodCheckForm({ foodQuery, setFoodQuery, foodWarning, foodCheckLoading,
             value={foodQuery}
             onChange={e => {
               setFoodQuery(e.target.value);
+              setFoodSuggestions([]);
             }}
             placeholder="Ask about a specific food..."
             className="form-input"
@@ -293,6 +254,7 @@ export default function GeminiRecommend() {
   const [foodQuery, setFoodQuery] = useState('');
   const [foodWarning, setFoodWarning] = useState('');
   const [foodCheckLoading, setFoodCheckLoading] = useState(false);
+  const [foodSuggestions, setFoodSuggestions] = useState([]);
   const [highlightedFood, setHighlightedFood] = useState('');
   const [activeMainTab, setActiveMainTab] = useState('recommendations');
   const user = JSON.parse(localStorage.getItem('medimeal_user'));
@@ -338,7 +300,7 @@ export default function GeminiRecommend() {
         .then(res => {
           if (res.data.input) setForm(f => ({ ...f, ...res.data.input }));
         })
-        .catch(() => console.log('No saved input found'));
+        .catch(err => console.log('No saved input found'));
     }
   }, [user]);
 
@@ -374,111 +336,23 @@ export default function GeminiRecommend() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    
-    // Age validation
-    const age = parseInt(form.age);
-    if (!age || age < 1 || age > 120) {
-      alert('Please enter a valid age between 1 and 120 years.');
-      return;
-    }
-    
     setLoading(true);
-    
     try {
-      // Enhanced API call with comprehensive user data
-      const requestData = {
-        age: age,
-        gender: form.gender,
-        foodType: form.foodType,
-        medication: form.medication,
-        disease: form.disease,
-        bmi: form.bmi || null,
-        weight: form.weight ? parseFloat(form.weight) : null,
-        height: form.height ? parseFloat(form.height) : null,
-        userId: user?.email || null
-      };
-      
-      console.log('Sending recommendation request:', requestData);
-      
-      // Call the correct Gemini API endpoint
-      const res = await axios.post('http://localhost:5000/api/gemini-recommend', requestData);
-      
-      // Process and enhance the response
-      const recommendationData = res.data;
-      
-      // Add metadata about the recommendations
-      const enhancedData = {
-        ...recommendationData,
-        userProfile: {
-          age: requestData.age,
-          foodType: requestData.foodType,
-          gender: requestData.gender,
-          bmi: requestData.bmi
-        },
-        generatedAt: new Date().toISOString(),
-        recommendationType: getRecommendationType(requestData)
-      };
-      
-      setResult(enhancedData);
+      const res = await axios.post('http://localhost:5000/api/recommend', form);
+      setResult(res.data);
       setSelectedMeal('breakfast');
       
-      // Save user input to database
+      // Save user input
       if (user && user.email) {
-        try {
-          await axios.post('http://localhost:5000/api/user-input', {
-            email: user.email,
-            input: requestData,
-            recommendations: enhancedData
-          });
-          console.log('User input and recommendations saved successfully');
-        } catch (saveError) {
-          console.error('Error saving user input:', saveError);
-        }
+        await axios.post('http://localhost:5000/api/save-user-input', {
+          email: user.email,
+          input: form
+        });
       }
-      
     } catch (error) {
       console.error('Error getting recommendations:', error);
-      
-      // Enhanced error handling with user-friendly messages
-      let errorMessage = 'Failed to get recommendations. Please try again.';
-      
-      if (error.response?.status === 429) {
-        errorMessage = 'Service is temporarily overloaded. Please try again in a few moments.';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Server error. Our team has been notified.';
-      } else if (!navigator.onLine) {
-        errorMessage = 'Please check your internet connection and try again.';
-      }
-      
-      // You can add a toast notification here if you have a notification system
-      alert(errorMessage);
     }
-    
     setLoading(false);
-  };
-  
-  // Helper function to determine recommendation type based on user data
-  const getRecommendationType = (userData) => {
-    const { age, foodType, bmi } = userData;
-    let type = [];
-    
-    if (age < 18) type.push('youth');
-    else if (age > 65) type.push('senior');
-    else type.push('adult');
-    
-    if (foodType === 'veg') type.push('vegetarian');
-    else if (foodType === 'vegan') type.push('vegan');
-    else if (foodType === 'nonveg') type.push('non-vegetarian');
-    else type.push('flexible');
-    
-    if (bmi) {
-      const bmiValue = parseFloat(bmi);
-      if (bmiValue < 18.5) type.push('underweight');
-      else if (bmiValue > 25) type.push('overweight');
-      else type.push('normal-weight');
-    }
-    
-    return type.join('-');
   };
 
   const handleCheckFood = async e => {
@@ -487,47 +361,27 @@ export default function GeminiRecommend() {
     
     setFoodCheckLoading(true);
     const mealData = result[selectedMeal?.toLowerCase()];
-    
     try {
-      // Enhanced food check with more comprehensive data
-      const requestData = {
-        age: parseInt(form.age),
+      const res = await axios.post('http://localhost:5000/api/check-food', {
+        age: form.age,
         gender: form.gender,
         foodType: form.foodType,
         disease: form.disease,
         medication: form.medication,
-        food: foodQuery.trim(),
-        bmi: form.bmi || null
-      };
-      
-      // Use the correct Gemini food check endpoint
-      const res = await axios.post('http://localhost:5000/api/gemini-food-check', requestData);
-      
-      const warningMessage = res.data.warning || res.data.message || 'Food safety checked.';
-      setFoodWarning(warningMessage);
-      
-      // Enhanced highlighting logic
+        food: foodQuery
+      });
+      setFoodWarning(res.data.warning);
       if (mealData?.not_recommended?.some(food => 
-        food.toLowerCase().includes(foodQuery.toLowerCase()) ||
-        foodQuery.toLowerCase().includes(food.toLowerCase())
+        food.toLowerCase().includes(foodQuery.toLowerCase())
       )) {
         setHighlightedFood(foodQuery.toLowerCase());
       } else {
         setHighlightedFood('');
       }
-      
-    } catch (error) {
-      console.error('Error checking food safety:', error);
-      
-      let errorMessage = 'Could not check food safety. Please try again.';
-      if (error.response?.status === 429) {
-        errorMessage = 'Service temporarily busy. Please try again in a moment.';
-      }
-      
-      setFoodWarning(errorMessage);
+    } catch {
+      setFoodWarning('Could not check food safety.');
       setHighlightedFood('');
     }
-    
     setFoodCheckLoading(false);
   };
 
@@ -567,13 +421,7 @@ export default function GeminiRecommend() {
                 )}
                 <button type="submit" className="btn btn-primary">
                   {step === steps.length - 1 ? (
-                    loading ? (
-                      <span>
-                        🤖 Analyzing your profile and generating personalized recommendations...
-                      </span>
-                    ) : (
-                      'Get My Personalized Meal Plan →'
-                    )
+                    loading ? 'Generating Recommendations...' : 'Get My Meal Plan →'
                   ) : (
                     'Next Step →'
                   )}
@@ -597,8 +445,7 @@ export default function GeminiRecommend() {
               {result[selectedMeal?.toLowerCase()] ? (
                 <RecommendationList 
                   mealData={result[selectedMeal.toLowerCase()]} 
-                  highlightedFood={highlightedFood}
-                  userProfile={result.userProfile}
+                  highlightedFood={highlightedFood} 
                 />
               ) : (
                 <div className="no-recommendations">
@@ -611,6 +458,8 @@ export default function GeminiRecommend() {
                 setFoodQuery={setFoodQuery}
                 foodWarning={foodWarning}
                 foodCheckLoading={foodCheckLoading}
+                foodSuggestions={foodSuggestions}
+                setFoodSuggestions={setFoodSuggestions}
                 onCheckFood={handleCheckFood}
               />
             </div>

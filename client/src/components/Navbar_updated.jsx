@@ -45,7 +45,8 @@ export default function Navbar(props) {
 
     switch (action) {
       case 'recommendations':
-        navigate('/recommend#recommendations');
+        navigate('/recommend');
+        window.location.hash = '#recommendations';
         break;
       case 'analytics':
         navigate('/recommend');
@@ -128,7 +129,7 @@ export default function Navbar(props) {
             </button>
             
             {/* Recommendations Link - Always visible */}
-            <Link to="/recommend#recommendations" className="navbar-link">🤖 AI Recommendations</Link>
+            <Link to="/recommend" className="navbar-link">🤖 AI Recommendations</Link>
           </div>
           
           <div className="navbar-right">

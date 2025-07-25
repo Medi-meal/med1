@@ -28,6 +28,33 @@ const faqs = [
 const Landing = ({ showAbout, setShowAbout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('medimeal_user')));
+
+  // Update user state when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUser(JSON.parse(localStorage.getItem('medimeal_user')));
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 1000); // Check every second for changes
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Enhanced Get Started button functionality
+  const handleGetStarted = () => {
+    if (user && user.email) {
+      // User is signed in, navigate to recommendations
+      navigate('/recommend#recommendations');
+    } else {
+      // User is not signed in, navigate to signup
+      navigate('/signup');
+    }
+  };
   const [openFaq, setOpenFaq] = useState(null);
   const [contactForm, setContactForm] = useState({ name: '', email: '', subject: '', message: '' });
   const aboutRef = useRef(null);
@@ -136,7 +163,12 @@ const Landing = ({ showAbout, setShowAbout }) => {
           <div className="hero-text">
             <h2 style={{ fontSize: '2.3rem', color: '#0a2342', fontWeight: 600, marginBottom: '1.2rem' }}>Personalized Food Recommendations for Your Health</h2>
             <p style={{ fontSize: '1.15rem', color: '#334155', marginBottom: '2.2rem', maxWidth: 600, marginLeft: 'auto', marginRight: 'auto' }}>Medimeal uses advanced AI to recommend meal plans tailored to your medication, age, and health conditions. Eat smarter, feel better, and take control of your wellness journey.</p>
-            <button className="landing-cta" style={{ padding: '1rem 2.5rem', fontSize: '1.15rem', borderRadius: 30, background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', color: '#fff', fontWeight: 600, border: 'none', boxShadow: '0 2px 8px rgba(10,35,66,0.10)', marginTop: 10 }} onClick={() => navigate('/signup')}>Get Started</button>
+            <button 
+              className="start-button"
+              onClick={handleGetStarted}
+            >
+              Get Started
+            </button>
           </div>
         </div>
       </section>
@@ -321,10 +353,10 @@ const Landing = ({ showAbout, setShowAbout }) => {
       </section>
 
       {/* CONTACT SECTION */}
-      <section id="contact" ref={contactRef} className="contact-section fade-in" style={{ margin: '3rem 0 2rem 0', padding: '2.5rem 0', background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', borderRadius: 24, maxWidth: 1100, marginLeft: 'auto', marginRight: 'auto' }}>
-        <h2 style={{ textAlign: 'center', color: '#0a2342', marginBottom: 32 }}>📧 Contact Us</h2>
+      <section id="contact" ref={contactRef} className="contact-section fade-in" style={{ margin: '3rem 0 2rem 0', padding: '2.5rem 0', background: 'linear-gradient(135deg, #0a2342 0%, #274472 100%)', borderRadius: 24, maxWidth: 1100, marginLeft: 'auto', marginRight: 'auto' }}>
+        <h2 style={{ textAlign: 'center', color: '#fff', marginBottom: 32 }}>📧 Contact Us</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '2rem', boxShadow: '0 4px 12px rgba(10,35,66,0.08)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: '2rem', boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
             <h3 style={{ color: '#0a2342', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
               📍 Office Address
             </h3>
@@ -336,7 +368,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
             </p>
           </div>
           
-          <div style={{ background: '#fff', borderRadius: 16, padding: '2rem', boxShadow: '0 4px 12px rgba(10,35,66,0.08)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: '2rem', boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
             <h3 style={{ color: '#0a2342', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
               📞 Get in Touch
             </h3>
@@ -349,7 +381,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
           </div>
         </div>
         
-        <div style={{ maxWidth: 600, margin: '2rem auto 0', background: '#fff', borderRadius: 16, padding: '2rem', boxShadow: '0 4px 12px rgba(10,35,66,0.08)' }}>
+        <div style={{ maxWidth: 600, margin: '2rem auto 0', background: 'rgba(255,255,255,0.95)', borderRadius: 16, padding: '2rem', boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
           <h3 style={{ color: '#0a2342', marginBottom: '1.5rem', textAlign: 'center' }}>✉️ Send us a Message</h3>
           <form onSubmit={handleContactFormSubmit} style={{ display: 'grid', gap: '1rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -358,7 +390,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
                 placeholder="Your Name" 
                 value={contactForm.name}
                 onChange={(e) => handleContactFormChange('name', e.target.value)}
-                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem' }}
+                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff' }}
                 required
               />
               <input 
@@ -366,7 +398,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
                 placeholder="Your Email" 
                 value={contactForm.email}
                 onChange={(e) => handleContactFormChange('email', e.target.value)}
-                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem' }}
+                style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff' }}
                 required
               />
             </div>
@@ -375,31 +407,40 @@ const Landing = ({ showAbout, setShowAbout }) => {
               placeholder="Subject" 
               value={contactForm.subject}
               onChange={(e) => handleContactFormChange('subject', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem' }}
+              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', backgroundColor: '#fff' }}
             />
             <textarea 
               placeholder="Your Message" 
               rows="4"
               value={contactForm.message}
               onChange={(e) => handleContactFormChange('message', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', resize: 'vertical' }}
+              style={{ padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: '1rem', resize: 'vertical', backgroundColor: '#fff' }}
               required
             ></textarea>
             <button 
               type="submit" 
               style={{ 
-                background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', 
-                color: '#fff', 
+                background: '#fff', 
+                color: '#0a2342', 
                 padding: '0.75rem 1.5rem', 
-                border: 'none', 
+                border: '2px solid #0a2342', 
                 borderRadius: 8, 
                 fontSize: '1rem', 
                 fontWeight: 600, 
                 cursor: 'pointer',
-                transition: 'transform 0.2s'
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}
-              onMouseOver={e => e.target.style.transform = 'translateY(-2px)'}
-              onMouseOut={e => e.target.style.transform = 'translateY(0)'}
+              onMouseOver={(e) => {
+                e.target.style.background = '#0a2342';
+                e.target.style.color = '#fff';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = '#fff';
+                e.target.style.color = '#0a2342';
+                e.target.style.transform = 'translateY(0)';
+              }}
             >
               Send Message
             </button>
