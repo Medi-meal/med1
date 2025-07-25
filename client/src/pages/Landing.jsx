@@ -207,7 +207,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ color: 'var(--green-dark)', marginBottom: 24 }}>How It Works</h2>
+          <h2 style={{ color: 'white', marginBottom: 24 }}>How It Works</h2>
           <div className="howitworks-steps" style={{ gap: 32 }}>
             {[
               { step: 1, title: 'Sign Up & Enter Details', desc: 'Create your account and provide your age, medication, and health conditions.' },
@@ -227,7 +227,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
       {/* TESTIMONIALS SECTION */}
       <section className="landing-testimonials fade-in" style={{ marginTop: 30 }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ color: 'var(--green-dark)', marginBottom: 24 }}>What Our Users Say</h2>
+          <h2 style={{ color: 'white', marginBottom: 24 }}>What Our Users Say</h2>
           <div className="testimonials-list" style={{ gap: 32 }}>
             {[
               { quote: '"Medimeal made it so easy to eat right for my health! The AI suggestions are spot on."', name: 'Priya, 34' },
@@ -245,7 +245,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
 
       {/* WHY CHOOSE MEDIMEAL SECTION */}
       <section className="why-medimeal-section" style={{ margin: '3rem 0 2rem 0', padding: '2.5rem 0', borderRadius: 24, maxWidth: 1100, marginLeft: 'auto', marginRight: 'auto' }}>
-        <h2 style={{ textAlign: 'center', color: '#0a2342', marginBottom: 32 }}>Why Choose Medimeal?</h2>
+        <h2 style={{ textAlign: 'center', color: 'white', marginBottom: 32 }}>Why Choose Medimeal?</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2.5rem' }}>
           {whyChoose.map((item) => (
             <div key={item.title} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 220, minWidth: 180, background: '#f8fafc', borderRadius: 16, boxShadow: '0 2px 12px #0a234211', padding: '1.5rem 1.2rem', marginBottom: 16 }}>
@@ -259,7 +259,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
 
       {/* FAQ SECTION */}
       <section id="faq" ref={faqRef} className="faq-section" style={{ margin: '3rem 0 2rem 0', padding: '2.5rem 0', borderRadius: 24, maxWidth: 900, marginLeft: 'auto', marginRight: 'auto' }}>
-        <h2 style={{ textAlign: 'center', color: '#0a2342', marginBottom: 32 }}>Frequently Asked Questions</h2>
+        <h2 style={{ textAlign: 'center', color: 'white', marginBottom: 32 }}>Frequently Asked Questions</h2>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
           {faqs.map((faq, i) => (
             <div key={faq.q} style={{ marginBottom: 18, borderRadius: 12, background: '#f1f5f9', boxShadow: '0 2px 8px #0a234211', overflow: 'hidden' }}>
@@ -297,7 +297,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
 
       {/* FINAL CTA SECTION */}
       <section className="landing-finalcta slide-up" style={{ marginTop: 40 }}>
-        <h2 style={{ color: 'var(--green-dark)', marginBottom: 18 }}>Ready to get your personalized meal plan?</h2>
+        <h2 style={{ color: 'white', marginBottom: 18 }}>Ready to get your personalized meal plan?</h2>
         <button
           style={{ padding: '1rem 2.5rem', fontSize: '1.15rem', borderRadius: 30, background: 'linear-gradient(90deg, #0a2342 60%, #274472 100%)', color: '#fff', fontWeight: 600, border: 'none', boxShadow: '0 2px 8px rgba(10,35,66,0.10)' }}
           onClick={() => {
