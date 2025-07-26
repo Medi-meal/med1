@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './GeminiRecommend.css';
 import UserDashboard from '../components/UserDashboard';
+import toast from 'react-hot-toast';
+import { validateMedication, validateHealthCondition } from '../utils/validation';
 
 // Use environment variable for API URL
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
@@ -56,6 +58,11 @@ function FormStep({ step, form, onChange, onCalculateBMI }) {
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
+        {form[step.name] && (
+          <div className="age-validation">
+            <span className="validation-success">✓ {step.label} selected</span>
+          </div>
+        )}
       </div>
     );
   }
@@ -132,6 +139,32 @@ function FormStep({ step, form, onChange, onCalculateBMI }) {
           )}
         </div>
       )}
+      {step.name === 'medication' && form[step.name] && (
+        <div className="age-validation">
+          {form[step.name].length < 2 && (
+            <span className="validation-error">Medication name must be at least 2 characters</span>
+          )}
+          {form[step.name].length > 100 && (
+            <span className="validation-error">Medication name must be less than 100 characters</span>
+          )}
+          {form[step.name].length >= 2 && form[step.name].length <= 100 && (
+            <span className="validation-success">✓ Valid medication name</span>
+          )}
+        </div>
+      )}
+      {step.name === 'disease' && form[step.name] && (
+        <div className="age-validation">
+          {form[step.name].length < 2 && (
+            <span className="validation-error">Medical condition must be at least 2 characters</span>
+          )}
+          {form[step.name].length > 200 && (
+            <span className="validation-error">Medical condition must be less than 200 characters</span>
+          )}
+          {form[step.name].length >= 2 && form[step.name].length <= 200 && (
+            <span className="validation-success">✓ Valid medical condition</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -201,6 +234,7 @@ function MainTabs({ activeMainTab, setActiveMainTab }) {
 // Enhanced Recommendation List Component
 function RecommendationList({ mealData, userProfile, onAddToFoodLogger, selectedMeal }) {
   const [selectedFoods, setSelectedFoods] = useState([]);
+  const isProcessing = useRef(false);
   
   const handleCheckboxChange = (item, isChecked) => {
     if (isChecked) {
@@ -211,7 +245,13 @@ function RecommendationList({ mealData, userProfile, onAddToFoodLogger, selected
   };
   
   const handleAddToFoodLogger = () => {
-    if (selectedFoods.length > 0) {
+    if (isProcessing.current || selectedFoods.length === 0) {
+      return;
+    }
+    
+    isProcessing.current = true;
+    
+    try {
       onAddToFoodLogger(selectedFoods);
       setSelectedFoods([]);
       // Reset all checkboxes
@@ -219,6 +259,11 @@ function RecommendationList({ mealData, userProfile, onAddToFoodLogger, selected
       checkboxes.forEach(checkbox => {
         checkbox.checked = false;
       });
+    } finally {
+      // Reset the flag after a short delay to prevent rapid clicking
+      setTimeout(() => {
+        isProcessing.current = false;
+      }, 1000);
     }
   };
   
@@ -244,8 +289,9 @@ function RecommendationList({ mealData, userProfile, onAddToFoodLogger, selected
           <button 
             className="add-to-logger-btn"
             onClick={handleAddToFoodLogger}
+            disabled={isProcessing.current}
           >
-            Add {selectedFoods.length} item{selectedFoods.length > 1 ? 's' : ''} to Food Logger
+            {isProcessing.current ? 'Adding...' : `Add ${selectedFoods.length} item${selectedFoods.length > 1 ? 's' : ''} to Food Logger`}
           </button>
         </div>
       )}
@@ -302,6 +348,7 @@ export default function GeminiRecommend() {
   const [activeMainTab, setActiveMainTab] = useState('recommendations');
   const [loggedFoods, setLoggedFoods] = useState([]);
   const user = JSON.parse(localStorage.getItem('medimeal_user'));
+  const isAddingFoods = useRef(false);
 
   // Handle URL fragment for direct navigation
   useEffect(() => {
@@ -351,10 +398,17 @@ export default function GeminiRecommend() {
   
   // Function to handle adding foods to the food logger with sync support
   const handleAddToFoodLogger = (selectedFoods) => {
-    if (!user || !user.email) {
-      alert('Please log in to add foods to your food logger');
+    // Prevent multiple calls
+    if (isAddingFoods.current) {
       return;
     }
+    
+    if (!user || !user.email) {
+      toast.error('Please log in to add foods to your food logger');
+      return;
+    }
+    
+    isAddingFoods.current = true;
     
     // Transform foods to include nutritional data for sync
     const foodsForSync = selectedFoods.map(food => ({
@@ -389,19 +443,24 @@ export default function GeminiRecommend() {
       
       setLoggedFoods(prev => [...prev, ...foodsWithTimestamp]);
       
-      alert(`${selectedFoods.length} recommended item${selectedFoods.length > 1 ? 's' : ''} added to your food logger and synchronized!`);
+      toast.success(`${selectedFoods.length} recommended item${selectedFoods.length > 1 ? 's' : ''} added to your food logger and synchronized!`);
       
       // If user is not already in the food logger tab, ask if they want to go there
       if (activeMainTab !== 'dashboard') {
-        if (confirm('Would you like to go to the Food Logger to see your updated meals?')) {
-          setActiveMainTab('dashboard');
-          window.location.hash = 'food-logger';
-        }
+        setTimeout(() => {
+          if (confirm('Would you like to go to the Food Logger to see your updated meals?')) {
+            setActiveMainTab('dashboard');
+            window.location.hash = 'food-logger';
+          }
+        }, 1000); // Small delay to ensure toast is visible
       }
     })
     .catch(err => {
       console.error('Error saving foods to logger:', err);
-      alert('Failed to save foods to your logger. Please try again.');
+      toast.error('Failed to save foods to your logger. Please try again.');
+    })
+    .finally(() => {
+      isAddingFoods.current = false;
     });
   };
 
@@ -441,7 +500,33 @@ export default function GeminiRecommend() {
     // Age validation
     const age = parseInt(form.age);
     if (!age || age < 1 || age > 120) {
-      alert('Please enter a valid age between 1 and 120 years.');
+      toast.error('Please enter a valid age between 1 and 120 years.');
+      return;
+    }
+    
+    // Medication validation
+    const medicationValidation = validateMedication(form.medication);
+    if (!medicationValidation.isValid) {
+      toast.error(medicationValidation.error);
+      return;
+    }
+    
+    // Disease/Medical Condition validation
+    const diseaseValidation = validateHealthCondition(form.disease);
+    if (!diseaseValidation.isValid) {
+      toast.error(diseaseValidation.error);
+      return;
+    }
+    
+    // Gender validation
+    if (!form.gender || form.gender.trim() === '') {
+      toast.error('Please select your gender.');
+      return;
+    }
+    
+    // Food Type validation
+    if (!form.foodType || form.foodType.trim() === '') {
+      toast.error('Please select your food type preference.');
       return;
     }
     
@@ -516,8 +601,8 @@ export default function GeminiRecommend() {
         errorMessage = 'Please check your internet connection and try again.';
       }
       
-      // You can add a toast notification here if you have a notification system
-      alert(errorMessage);
+      // Show error toast notification
+      toast.error(errorMessage);
     }
     
     setLoading(false);
@@ -641,13 +726,29 @@ export default function GeminiRecommend() {
             
             setLoggedFoods(prev => [...prev, foodWithMetadata]);
             
-            // Optionally save to backend
+            // Save to backend with proper food structure
             if (user?.email) {
+              const foodForBackend = {
+                food: newFood.name,
+                mealType: newFood.mealType,
+                calories: newFood.calories,
+                protein: newFood.protein,
+                carbs: newFood.carbs,
+                fat: newFood.fat,
+                fiber: newFood.fiber,
+                source: 'manual',
+                timestamp: new Date()
+              };
+              
               axios.post(`${API_URL}/api/food-logger`, {
-                foods: [foodWithMetadata],
+                foods: [foodForBackend],
                 email: user.email
+              }).then(response => {
+                console.log('Food saved to backend:', response.data);
+                toast.success(`${newFood.name} added to your ${newFood.mealType}!`);
               }).catch(error => {
                 console.error('Error saving food to backend:', error);
+                toast.error('Failed to save food to backend. Please try again.');
               });
             }
           }}

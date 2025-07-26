@@ -6,7 +6,7 @@ require('dotenv').config();
 const { Configuration, OpenAIApi } = require('openai');
 const axios = require('axios');
 const { OAuth2Client } = require('google-auth-library');
-const GOOGLE_CLIENT_ID = '772559724147-utfpmphmr81s84n2eao0fnl7likdp79r.apps.googleusercontent.com';
+const config = require('./config');
 
 const User = require('./models/User');
 const UserInput = require('./models/UserInput');
@@ -16,9 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(config.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+  .catch(err => console.log('MongoDB connection error:', err));
 
 // Signup Route
 app.post('/api/signup', async (req, res) => {
@@ -87,7 +87,7 @@ app.post('/api/gemini-recommend', async (req, res) => {
   while (attempts < 3) {
     try {
       const geminiRes = await axios.post(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + config.GEMINI_API_KEY,
         {
           contents: [{ parts: [{ text: prompt }] }]
         }
@@ -244,7 +244,7 @@ app.post('/api/google-login', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+
 app.post('/api/food-analysis', async (req, res) => {
   const { food, userProfile } = req.body;
 
@@ -591,4 +591,8 @@ app.post('/api/add-multiple-recommended-foods', async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+const PORT = config.PORT;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Client URL: ${config.CLIENT_URL}`);
+});
