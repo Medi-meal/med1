@@ -4,9 +4,12 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import GeminiRecommend from './pages/GeminiRecommend';
 import Navbar from './components/Navbar';
+import UserProfileRefactored from './pages/UserProfileRefactored';
+import SQLAgentPage from './pages/SQLAgentPage';
 import { NotificationProvider } from './hooks/useNotifications';
 import { Toaster } from 'react-hot-toast';
 import './styles/responsive.css'; // Add responsive styles
+import './styles/UserProfileRefactored.css'; // Add new profile styles
 
 import ProfileWizard from './pages/ProfileWizard';
 import UserProfile from './pages/UserProfile';
@@ -59,8 +62,13 @@ function App() {
         <Route path="/gemini-recommend" element={<ErrorBoundary>
           <GeminiRecommend />
         </ErrorBoundary>} />
+        <Route path="/sql-agent" element={<ErrorBoundary>
+          <SQLAgentPage />
+        </ErrorBoundary>} />
         <Route path="/profile-wizard" element={<ProfileWizard />} />
-        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/profile" element={<ErrorBoundary>
+          <UserProfileRefactored />
+        </ErrorBoundary>} />
       </Routes>
       <Toaster
         position="top-right"

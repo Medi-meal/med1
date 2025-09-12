@@ -30,7 +30,7 @@ export default function Signup() {
     }
     setShowTermsError(false);
     try {
-      const res = await axios.post('http://localhost:5000/api/signup', { name, email, password });
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/signup`, { name, email, password });
       setMsg(res.data.message);
       if (res.data.message && res.data.message.toLowerCase().includes('signup successful')) {
         localStorage.setItem('medimeal_user', JSON.stringify({ name, email }));
@@ -160,7 +160,7 @@ export default function Signup() {
             <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
               <GoogleLogin
                 onSuccess={credentialResponse => {
-                  fetch('http://localhost:5000/api/google-login', {
+                  fetch(`${import.meta.env.VITE_BACKEND_URL}/api/google-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: credentialResponse.credential })
@@ -179,7 +179,6 @@ export default function Signup() {
                 onError={() => {
                   setMsg('Google Signup Failed');
                 }}
-                width="100%"
                 size="large"
                 text="signup_with"
               />

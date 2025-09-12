@@ -47,6 +47,9 @@ export default function Navbar(props) {
       case 'recommendations':
         navigate('/gemini-recommend#recommendations');
         break;
+      case 'sql-agent':
+        navigate('/sql-agent');
+        break;
       case 'analytics':
         navigate('/gemini-recommend');
         window.location.hash = '#dashboard';
@@ -139,6 +142,11 @@ export default function Navbar(props) {
             <button className="navbar-link" onClick={() => handleQuickAction('recommendations')}>
               🤖 AI Recommendations
             </button>
+            
+            {/* SQL Query Agent Link */}
+            <button className="navbar-link" onClick={() => handleQuickAction('sql-agent')}>
+              🔍 Query Data
+            </button>
           </div>
           
           <div className="navbar-right">
@@ -182,6 +190,12 @@ export default function Navbar(props) {
                 onClick={() => handleQuickAction('recommendations')}
               >
                 🤖 AI Recommendations
+              </button>
+              <button 
+                className="floating-dropdown-item"
+                onClick={() => handleQuickAction('sql-agent')}
+              >
+                🔍 Query Data
               </button>
               <button 
                 className="floating-dropdown-item"

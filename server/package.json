@@ -20,6 +20,7 @@
     "mongoose": "^8.16.4",
     "openai": "^5.10.1",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "sqlite3": "^5.1.7"
   }
 }

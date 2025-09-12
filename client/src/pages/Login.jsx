@@ -21,7 +21,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/login', { email, password });
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login`, { email, password });
       setMsg(res.data.message);
       // Redirect to landing page after successful login
       if (res.data.message && res.data.message.toLowerCase().includes('login successful')) {
@@ -121,7 +121,7 @@ export default function Login() {
             <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
               <GoogleLogin
                 onSuccess={credentialResponse => {
-                  fetch('http://localhost:5000/api/google-login', {
+                  fetch(`${import.meta.env.VITE_BACKEND_URL}/api/google-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: credentialResponse.credential })
@@ -140,7 +140,6 @@ export default function Login() {
                 onError={() => {
                   setMsg('Google Login Failed');
                 }}
-                width="100%"
                 size="large"
                 text="continue_with"
               />

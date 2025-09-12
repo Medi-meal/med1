@@ -12,9 +12,15 @@ const User = require('./models/User');
 const UserInput = require('./models/UserInput');
 const FoodLog = require('./models/FoodLog');
 
+// Import SQL agent route
+const sqlAgentRoute = require('./routes/sqlAgent');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Mount SQL agent route
+app.use('/api', sqlAgentRoute);
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
