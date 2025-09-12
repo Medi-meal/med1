@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CircularProgressbarWithChildren } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -12,6 +12,8 @@ const UserDashboard = ({ user, loggedFoods, onFoodAdded }) => {
   useNotifications();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const lastToastTime = useRef(0);
+  const isUpdating = useRef(false);
   const [dashboardData, setDashboardData] = useState({
     mealFeedbackTrend: [],
     frequentFoods: [],
@@ -169,7 +171,10 @@ const UserDashboard = ({ user, loggedFoods, onFoodAdded }) => {
 
     // Simulate API calls and generate real-time data
     const fetchData = async () => {
+      if (isUpdating.current) return;
+      
       try {
+        isUpdating.current = true;
         setLoading(true);
         
         // Generate fresh data based on loggedFoods
@@ -177,15 +182,28 @@ const UserDashboard = ({ user, loggedFoods, onFoodAdded }) => {
         setDashboardData(newData);
         
         setLoading(false);
-        toast.success('📊 Dashboard data updated with latest trends!');
+        
+        // Only show toast once per hour
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+        
+        if (now - lastToastTime.current > oneHour) {
+          toast.success('📊 Dashboard data updated with latest trends!');
+          lastToastTime.current = now;
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         toast.error('❌ Failed to load dashboard data');
         setLoading(false);
+      } finally {
+        isUpdating.current = false;
       }
     };
 
-    fetchData();
+    // Debounce the fetchData call
+    const timeoutId = setTimeout(fetchData, 500);
+    
+    return () => clearTimeout(timeoutId);
     
     // Update data when loggedFoods changes
   }, [loggedFoods]);

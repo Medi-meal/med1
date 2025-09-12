@@ -11,11 +11,18 @@ export default function Navbar(props) {
   // Update user state when localStorage changes
   useEffect(() => {
     const handleStorageChange = () => {
-      setUser(JSON.parse(localStorage.getItem('medimeal_user')));
+      const storedUser = JSON.parse(localStorage.getItem('medimeal_user'));
+      // Only update if the user data has actually changed
+      setUser(prevUser => {
+        if (JSON.stringify(prevUser) !== JSON.stringify(storedUser)) {
+          return storedUser;
+        }
+        return prevUser;
+      });
     };
     
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 1000); // Check every second for changes
+    const interval = setInterval(handleStorageChange, 5000); // Check less frequently
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -71,10 +78,16 @@ export default function Navbar(props) {
   };
 
   const handleHomeClick = () => {
-    if (window.location.pathname === '/') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
+    if (user && user.email) {
+      // User is logged in, go to home dashboard
       navigate('/');
+    } else {
+      // User is not logged in, go to landing page
+      if (window.location.pathname === '/') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        navigate('/');
+      }
     }
   };
 

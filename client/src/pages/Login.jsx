@@ -14,7 +14,7 @@ export default function Login() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('medimeal_user'));
     if (user && user.email) {
-      navigate('/gemini-recommend#recommendations');
+      navigate('/');
     }
   }, [navigate]);
 
@@ -23,12 +23,12 @@ export default function Login() {
     try {
       const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login`, { email, password });
       setMsg(res.data.message);
-      // Redirect to landing page after successful login
+      // Redirect to home page after successful login
       if (res.data.message && res.data.message.toLowerCase().includes('login successful')) {
         // Store user info in localStorage (prefer name if available)
         const userName = res.data.name || email;
         localStorage.setItem('medimeal_user', JSON.stringify({ name: userName, email }));
-        setTimeout(() => navigate('/gemini-recommend#recommendations'), 1000); // 1 second delay for feedback
+        setTimeout(() => navigate('/'), 1000); // 1 second delay for feedback
       }
     } catch (err) {
       setMsg(err.response?.data?.message || 'Login failed');
@@ -131,7 +131,7 @@ export default function Login() {
                       if (data.email) {
                         localStorage.setItem('medimeal_user', JSON.stringify({ name: data.name, email: data.email }));
                         setMsg('Login successful');
-                        setTimeout(() => navigate('/gemini-recommend#recommendations'), 1000);
+                        setTimeout(() => navigate('/'), 1000);
                       } else {
                         setMsg('Google login failed.');
                       }

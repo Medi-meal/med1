@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNotifications } from '../hooks/useNotifications';
 
+// Use environment variable for API URL
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 const FoodLogger = ({ user }) => {
   const [loggedMeals, setLoggedMeals] = useState([]);
   const [foodLogs, setFoodLogs] = useState([]);
@@ -19,7 +22,7 @@ const FoodLogger = ({ user }) => {
   useEffect(() => {
     if (user && user.email) {
       setLoading(true);
-      axios.get(`http://localhost:5000/api/food-logger?email=${encodeURIComponent(user.email)}`)
+      axios.get(`${API_URL}/api/food-logger?email=${encodeURIComponent(user.email)}`)
         .then(res => {
           if (res.data.success && res.data.foods) {
             setFoodLogs(res.data.foods);

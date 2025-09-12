@@ -14,21 +14,27 @@
     "axios": "^1.11.0",
     "bootstrap": "^5.3.7",
     "framer-motion": "^12.23.9",
-    "react": "^19.1.0",
+    "react": "^18.2.0",
     "react-calendar-heatmap": "^1.10.0",
     "react-circular-progressbar": "^2.2.0",
+<<<<<<< HEAD
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.61.1",
     "react-hot-toast": "^2.5.2",
     "react-router-dom": "^7.7.0",
     "react-select": "^5.10.2",
+=======
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.5.2",
+    "react-router-dom": "^6.8.0",
+>>>>>>> 8a4529a3ea76d3a29efb66678793d95a9be92245
     "react-spinners": "^0.17.0",
     "recharts": "^3.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.6.0",
     "eslint": "^9.30.1",
     "eslint-plugin-react-hooks": "^5.2.0",
