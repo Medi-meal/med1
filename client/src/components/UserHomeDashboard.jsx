@@ -37,14 +37,9 @@ const UserHomeDashboard = ({ user }) => {
         hasFetchedData.current = true;
         setLoading(true);
         
-        // Fetch user's recent data
-        const [foodLogsRes, userInputRes] = await Promise.all([
-          axios.get(`${API_URL}/api/food-logger?email=${encodeURIComponent(user.email)}`).catch(() => ({ data: { foods: [] } })),
-          axios.get(`${API_URL}/api/user-input?email=${encodeURIComponent(user.email)}`).catch(() => ({ data: { input: null } }))
-        ]);
-
+        // Fetch user's recent data (only food logs, no saved inputs)
+        const foodLogsRes = await axios.get(`${API_URL}/api/food-logger?email=${encodeURIComponent(user.email)}`).catch(() => ({ data: { foods: [] } }));
         const foodLogs = foodLogsRes.data.foods || [];
-        const userInput = userInputRes.data.input;
 
         // Generate dashboard data
         const today = new Date();
@@ -79,8 +74,8 @@ const UserHomeDashboard = ({ user }) => {
           };
         });
 
-        // Generate recent recommendations
-        const recentRecommendations = userInput ? [
+        // Generate recent recommendations based on food logs
+        const recentRecommendations = foodLogs.length > 0 ? [
           { meal: 'Breakfast', foods: ['Oatmeal with berries', 'Greek yogurt'], status: 'completed' },
           { meal: 'Lunch', foods: ['Grilled chicken salad', 'Quinoa'], status: 'pending' },
           { meal: 'Dinner', foods: ['Salmon with vegetables', 'Brown rice'], status: 'pending' }
@@ -93,12 +88,56 @@ const UserHomeDashboard = ({ user }) => {
           { time: '9:00 PM', meal: 'Snack', foods: ['Almonds', 'Apple'], calories: 180 }
         ];
 
-        // Quick actions
+        // Enhanced quick actions with progress tracking
         const quickActions = [
-          { icon: '🍽️', title: 'Log Food', action: () => navigate('/gemini-recommend#food-logger'), color: '#22c55e' },
-          { icon: '🤖', title: 'Get Recommendations', action: () => navigate('/gemini-recommend'), color: '#3b82f6' },
-          { icon: '📊', title: 'View Analytics', action: () => navigate('/gemini-recommend#dashboard'), color: '#8b5cf6' },
-          { icon: '👤', title: 'Update Profile', action: () => navigate('/profile'), color: '#f59e0b' }
+          { 
+            icon: '🍽️', 
+            title: 'Log Food', 
+            action: () => navigate('/gemini-recommend#food-logger'), 
+            color: '#22c55e',
+            progress: Math.min(100, (todaysFoods.length / 3) * 100), // Progress based on meals logged today
+            description: `${todaysFoods.length}/3 meals logged today`
+          },
+          { 
+            icon: '🤖', 
+            title: 'Get Recommendations', 
+            action: () => navigate('/gemini-recommend'), 
+            color: '#3b82f6',
+            progress: 0, // Always start fresh for recommendations
+            description: 'Get personalized meal recommendations'
+          },
+          { 
+            icon: '📊', 
+            title: 'View Analytics', 
+            action: () => navigate('/gemini-recommend#analytics'), 
+            color: '#8b5cf6',
+            progress: Math.min(100, (foodLogs.length / 10) * 100), // Progress based on total foods logged
+            description: `${foodLogs.length} foods tracked`
+          },
+          { 
+            icon: '🔍', 
+            title: 'Query Data', 
+            action: () => navigate('/sql-agent'), 
+            color: '#f59e0b',
+            progress: foodLogs.length > 0 ? 100 : 0, // Can query if has data
+            description: foodLogs.length > 0 ? 'Data available to query' : 'No data to query yet'
+          },
+          { 
+            icon: '👤', 
+            title: 'My Profile', 
+            action: () => navigate('/profile'), 
+            color: '#ef4444',
+            progress: 50, // Base progress on user having an account
+            description: 'Manage your profile settings'
+          },
+          { 
+            icon: '🎯', 
+            title: 'Set Goals', 
+            action: () => navigate('/gemini-recommend#analytics'), 
+            color: '#06b6d4',
+            progress: 25, // Placeholder progress
+            description: 'Track your health goals'
+          }
         ];
 
         setDashboardData({
@@ -229,7 +268,7 @@ const UserHomeDashboard = ({ user }) => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        transition={{ duration: 0.3, delay: 0.05 }}
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -253,12 +292,40 @@ const UserHomeDashboard = ({ user }) => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s ease'
+              gap: '0.75rem',
+              transition: 'all 0.2s ease',
+              position: 'relative'
             }}
           >
             <span style={{ fontSize: '2rem' }}>{action.icon}</span>
             <span style={{ fontWeight: '600', color: '#374151' }}>{action.title}</span>
+            
+            {/* Progress Bar */}
+            <div style={{ width: '100%', marginTop: '0.5rem' }}>
+              <div style={{ 
+                width: '100%', 
+                height: '6px', 
+                backgroundColor: '#f3f4f6', 
+                borderRadius: '3px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${action.progress}%`,
+                  height: '100%',
+                  backgroundColor: action.color || '#22c55e',
+                  borderRadius: '3px',
+                  transition: 'width 0.5s ease'
+                }} />
+              </div>
+              <div style={{ 
+                fontSize: '0.75rem', 
+                color: '#6b7280', 
+                marginTop: '0.25rem',
+                textAlign: 'center'
+              }}>
+                {action.description}
+              </div>
+            </div>
           </motion.button>
         ))}
       </motion.div>
@@ -270,7 +337,7 @@ const UserHomeDashboard = ({ user }) => {
         <motion.div
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
           style={{
             background: 'white',
             borderRadius: '16px',
@@ -316,7 +383,7 @@ const UserHomeDashboard = ({ user }) => {
         <motion.div
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
           style={{
             background: 'white',
             borderRadius: '16px',
@@ -357,7 +424,7 @@ const UserHomeDashboard = ({ user }) => {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
           style={{
             background: 'white',
             borderRadius: '16px',
@@ -399,7 +466,7 @@ const UserHomeDashboard = ({ user }) => {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
+          transition={{ duration: 0.3, delay: 0.25 }}
           style={{
             background: 'white',
             borderRadius: '16px',
@@ -442,7 +509,7 @@ const UserHomeDashboard = ({ user }) => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
+        transition={{ duration: 0.3, delay: 0.3 }}
         style={{
           background: 'white',
           borderRadius: '16px',

@@ -17,7 +17,7 @@ export const validationRules = {
   },
   bmi: {
     min: 10,
-    max: 80,
+    max: 100,
     message: 'BMI must be between 10 and 80'
   }
 };
@@ -73,29 +73,123 @@ export const validatePassword = (password) => {
   return { isValid: true, error: null };
 };
 
+// Common medications list for validation
+const COMMON_MEDICATIONS = [
+  'none', 'no medication', 'n/a', 'nil',
+  // Pain relief
+  'ibuprofen', 'paracetamol', 'acetaminophen', 'aspirin', 'tylenol', 'advil',
+  // Diabetes
+  'metformin', 'insulin', 'glimepiride', 'gliclazide', 'pioglitazone',
+  // Blood pressure
+  'lisinopril', 'amlodipine', 'losartan', 'atenolol', 'metoprolol',
+  // Heart conditions
+  'atorvastatin', 'simvastatin', 'clopidogrel', 'warfarin',
+  // Antibiotics
+  'amoxicillin', 'azithromycin', 'ciprofloxacin', 'doxycycline',
+  // Mental health
+  'sertraline', 'fluoxetine', 'alprazolam', 'lorazepam',
+  // Thyroid
+  'levothyroxine', 'methimazole',
+  // Vitamins
+  'vitamin d', 'vitamin b12', 'calcium', 'iron', 'folic acid'
+];
+
+// Common medical conditions
+export const MEDICAL_CONDITIONS = [
+  'None / Healthy',
+  'Diabetes Type 1',
+  'Diabetes Type 2',
+  'High Blood Pressure (Hypertension)',
+  'Heart Disease',
+  'High Cholesterol',
+  'Asthma',
+  'Arthritis',
+  'Thyroid Disorders',
+  'Depression',
+  'Anxiety',
+  'PCOS (Polycystic Ovary Syndrome)',
+  'Kidney Disease',
+  'Liver Disease',
+  'Obesity',
+  'Anemia',
+  'Gastroesophageal Reflux Disease (GERD)',
+  'Irritable Bowel Syndrome (IBS)',
+  'Celiac Disease',
+  'Food Allergies',
+  'Migraine',
+  'Osteoporosis',
+  'Sleep Apnea',
+  'Other (Please specify)'
+];
+
 export const validateMedication = (medication) => {
   if (!medication || medication.trim() === '') {
-    return { isValid: false, error: 'Medication name is required' };
+    return { isValid: false, error: 'Medication information is required. Enter "none" if not taking any.' };
   }
-  if (medication.length < 2) {
+  
+  const cleanMedication = medication.toLowerCase().trim();
+  
+  // Check length
+  if (cleanMedication.length < 2) {
     return { isValid: false, error: 'Medication name must be at least 2 characters' };
   }
-  if (medication.length > 100) {
-    return { isValid: false, error: 'Medication name must be less than 100 characters' };
+  if (cleanMedication.length > 200) {
+    return { isValid: false, error: 'Medication information must be less than 200 characters' };
   }
-  return { isValid: true, error: null };
+  
+  // Check for potentially harmful patterns
+  const suspiciousPatterns = [
+    /\d{10,}/, // Very long numbers (might be phone numbers)
+    /[<>{}]/,  // HTML/XML tags
+    /(script|javascript)/i, // Potential XSS
+  ];
+  
+  for (let pattern of suspiciousPatterns) {
+    if (pattern.test(cleanMedication)) {
+      return { isValid: false, error: 'Please enter only medication names and dosages' };
+    }
+  }
+  
+  // Suggest common medications if partially matching
+  const suggestions = COMMON_MEDICATIONS.filter(med => 
+    med.includes(cleanMedication) && med !== cleanMedication
+  ).slice(0, 3);
+  
+  return { 
+    isValid: true, 
+    error: null,
+    suggestions: suggestions.length > 0 ? suggestions : null
+  };
 };
 
 export const validateHealthCondition = (condition) => {
   if (!condition || condition.trim() === '') {
-    return { isValid: false, error: 'Health condition is required' };
+    return { isValid: false, error: 'Medical condition is required. Select "None / Healthy" if applicable.' };
   }
-  if (condition.length < 2) {
-    return { isValid: false, error: 'Health condition must be at least 2 characters' };
+  
+  const cleanCondition = condition.trim();
+  
+  // Check length
+  if (cleanCondition.length < 2) {
+    return { isValid: false, error: 'Medical condition must be at least 2 characters' };
   }
-  if (condition.length > 200) {
-    return { isValid: false, error: 'Health condition must be less than 200 characters' };
+  if (cleanCondition.length > 300) {
+    return { isValid: false, error: 'Medical condition description must be less than 300 characters' };
   }
+  
+  // Check for potentially harmful patterns
+  const suspiciousPatterns = [
+    /\d{10,}/, // Very long numbers
+    /[<>{}]/,  // HTML/XML tags
+    /(script|javascript)/i, // Potential XSS
+  ];
+  
+  for (let pattern of suspiciousPatterns) {
+    if (pattern.test(cleanCondition)) {
+      return { isValid: false, error: 'Please enter only medical condition information' };
+    }
+  }
+  
   return { isValid: true, error: null };
 };
 

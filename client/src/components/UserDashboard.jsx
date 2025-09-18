@@ -201,7 +201,7 @@ const UserDashboard = ({ user, loggedFoods, onFoodAdded }) => {
     };
 
     // Debounce the fetchData call
-    const timeoutId = setTimeout(fetchData, 500);
+    const timeoutId = setTimeout(fetchData, 200); // Reduced delay for faster dashboard updates
     
     return () => clearTimeout(timeoutId);
     

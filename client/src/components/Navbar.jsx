@@ -22,7 +22,7 @@ export default function Navbar(props) {
     };
     
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 5000); // Check less frequently
+    const interval = setInterval(handleStorageChange, 3000); // Check for updates
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -78,16 +78,11 @@ export default function Navbar(props) {
   };
 
   const handleHomeClick = () => {
-    if (user && user.email) {
-      // User is logged in, go to home dashboard
-      navigate('/');
+    // Always navigate to landing page when home is clicked
+    if (window.location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      // User is not logged in, go to landing page
-      if (window.location.pathname === '/') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     }
   };
 
@@ -96,41 +91,6 @@ export default function Navbar(props) {
     setUser(null);
     navigate('/');
   };
-
-  const handleNavigation = (action) => {
-    switch (action) {
-      case 'faq':
-        // Handle FAQ navigation
-        if (props.onFAQClick) {
-          props.onFAQClick();
-        } else {
-          // Default FAQ behavior - could navigate to FAQ page or show modal
-          navigate('/faq');
-        }
-        break;
-      case 'contact':
-        // Handle Contact & Support navigation
-        if (props.onContactClick) {
-          props.onContactClick();
-        } else {
-          // Default contact behavior
-          navigate('/contact');
-        }
-        break;
-      case 'subscription':
-        // Handle Subscription navigation
-        if (props.onSubscriptionClick) {
-          props.onSubscriptionClick();
-        } else {
-          // Default subscription behavior
-          navigate('/subscription');
-        }
-        break;
-      default:
-        break;
-    }
-  };
-
   return (
     <>
       <nav className="navbar">
@@ -138,16 +98,19 @@ export default function Navbar(props) {
           <div className="navbar-left">
             <Link to="/" className="navbar-logo">Medimeal</Link>
             <a onClick={handleHomeClick} className="navbar-link" style={{cursor: 'pointer'}}>Home</a>
+            {user && user.email && (
+              <Link to="/dashboard" className="navbar-link">Dashboard</Link>
+            )}
             {props.onAboutClick && (
               <button className="navbar-link" onClick={props.onAboutClick}>About</button>
             )}
-            <button className="navbar-link" onClick={() => handleNavigation('faq')}>
+            <button className="navbar-link" onClick={props.onFAQClick}>
               FAQs
             </button>
-            <button className="navbar-link" onClick={() => handleNavigation('contact')}>
+            <button className="navbar-link" onClick={props.onContactClick}>
               Contact & Support
             </button>
-            <button className="navbar-link" onClick={() => handleNavigation('subscription')}>
+            <button className="navbar-link" onClick={props.onSubscriptionClick}>
               Subscription
             </button>
             

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 
 // Create notification context
@@ -17,10 +17,10 @@ export const NotificationProvider = ({ children }) => {
     const newNotification = { ...notification, id };
     setNotifications(prev => [...prev, newNotification]);
     
-    // Auto remove after 5 seconds
+    // Auto remove after 3 seconds for faster UI experience
     setTimeout(() => {
       removeNotification(id);
-    }, 5000);
+    }, 3000);
     
     return id;
   }, [removeNotification]);
@@ -146,27 +146,5 @@ export const NotificationProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use notifications
-export const useNotifications = () => {
-  const context = useContext(NotificationContext);
-  
-  // If not in a provider context, return standalone toast functions
-  if (!context) {
-    return {
-      showSuccess: (message, options = {}) => toast.success(message, options),
-      showError: (message, options = {}) => toast.error(message, options),
-      showWarning: (message, options = {}) => toast(message, { icon: '⚠️', ...options }),
-      showInfo: (message, options = {}) => toast(message, { icon: 'ℹ️', ...options }),
-      showLoading: (message, options = {}) => toast.loading(message, options),
-      notifications: [],
-      removeNotification: () => {},
-      clearAllNotifications: () => {},
-      addNotification: () => {}
-    };
-  }
-  
-  return context;
-};
-
 // Default export for convenience
-export default useNotifications;
+export default NotificationContext;

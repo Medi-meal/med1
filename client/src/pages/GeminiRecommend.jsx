@@ -3,7 +3,7 @@ import axios from 'axios';
 import './GeminiRecommend.css';
 import UserDashboard from '../components/UserDashboard';
 import toast from 'react-hot-toast';
-import { validateMedication, validateHealthCondition } from '../utils/validation';
+import { validateMedication, validateHealthCondition, MEDICAL_CONDITIONS } from '../utils/validation';
 
 // Use environment variable for API URL
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
@@ -12,9 +12,9 @@ const steps = [
   { name: 'age', label: 'Age', type: 'number', required: true },
   { name: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'], required: true },
   { name: 'foodType', label: 'Food Type', type: 'select', options: ['veg', 'nonveg', 'vegan'], required: true },
-  { name: 'weightHeightBmi', label: 'Weight, Height & BMI', type: 'bmi', required: false },
-  { name: 'medication', label: 'Medication', type: 'text', required: true },
-  { name: 'disease', label: 'Medical Condition', type: 'text', required: true },
+  { name: 'weightHeightBmi', label: 'Weight, Height & BMI (Optional)', type: 'bmi', required: false },
+  { name: 'medication', label: 'Medication', type: 'medication', required: true },
+  { name: 'disease', label: 'Medical Condition', type: 'medical-condition', required: true },
 ];
 
 // Progress Indicator Component
@@ -70,7 +70,7 @@ function FormStep({ step, form, onChange, onCalculateBMI }) {
   if (step.type === 'bmi') {
     return (
       <div className="form-group">
-        <label>Weight (kg) & Height (cm)</label>
+        <label>Weight (kg) & Height (cm) <span style={{color: '#6b7280', fontSize: '0.875rem'}}>(Optional)</span></label>
         <div className="bmi-inputs">
           <input
             name="weight"
@@ -91,8 +91,22 @@ function FormStep({ step, form, onChange, onCalculateBMI }) {
             className="form-input half-width"
           />
         </div>
-        <button type="button" onClick={onCalculateBMI} className="bmi-button">
-          Calculate BMI
+        <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>
+          <small style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+            💡 Gender-specific BMI calculation available. Please select your gender first for more accurate results.
+          </small>
+        </div>
+        <button 
+          type="button" 
+          onClick={onCalculateBMI} 
+          className="bmi-button"
+          disabled={!form.weight || !form.height}
+          style={{
+            opacity: (!form.weight || !form.height) ? 0.6 : 1,
+            cursor: (!form.weight || !form.height) ? 'not-allowed' : 'pointer'
+          }}
+        >
+          Calculate BMI {form.gender && `(${form.gender})`}
         </button>
         {form.bmi && (
           <div className={`bmi-result ${
@@ -106,6 +120,107 @@ function FormStep({ step, form, onChange, onCalculateBMI }) {
                parseFloat(form.bmi) >= 18.5 && parseFloat(form.bmi) < 25 ? '(Normal)' :
                parseFloat(form.bmi) >= 25 && parseFloat(form.bmi) < 30 ? '(Overweight)' : '(Obese)'}
             </span>
+            {form.gender && (
+              <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                📊 Calculated using {form.gender}-specific formula for better accuracy
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  // Enhanced Medication Input
+  if (step.type === 'medication') {
+    const medicationSuggestions = [
+      'None / No medication',
+      'Metformin (Diabetes)',
+      'Lisinopril (Blood Pressure)',
+      'Atorvastatin (Cholesterol)',
+      'Levothyroxine (Thyroid)',
+      'Vitamin D supplements',
+      'Multivitamins'
+    ];
+    
+    return (
+      <div className="form-group">
+        <label>{step.label}</label>
+        <input
+          name={step.name}
+          type="text"
+          value={form[step.name]}
+          onChange={onChange}
+          required={step.required}
+          className="form-input"
+          placeholder="Enter medications you're taking (e.g., Metformin 500mg daily)"
+          list="medication-suggestions"
+        />
+        <datalist id="medication-suggestions">
+          {medicationSuggestions.map((med, index) => (
+            <option key={index} value={med} />
+          ))}
+        </datalist>
+        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          💡 Include dosage if known. Write "None" if not taking any medication.
+        </div>
+        {form[step.name] && (
+          <div className="age-validation">
+            {validateMedication(form[step.name]).isValid ? (
+              <span className="validation-success">✓ Valid medication information</span>
+            ) : (
+              <span className="validation-error">{validateMedication(form[step.name]).error}</span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  // Enhanced Medical Condition Select with Other Option
+  if (step.type === 'medical-condition') {
+    return (
+      <div className="form-group">
+        <label>{step.label}</label>
+        <select
+          name={step.name}
+          value={form[step.name]}
+          onChange={onChange}
+          required={step.required}
+          className="form-select"
+        >
+          <option value="">Select your medical condition</option>
+          {MEDICAL_CONDITIONS.map((condition, index) => (
+            <option key={index} value={condition}>{condition}</option>
+          ))}
+        </select>
+        
+        {/* Show text input if "Other" is selected */}
+        {form[step.name] === 'Other (Please specify)' && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <input
+              name="customDisease"
+              type="text"
+              value={form.customDisease || ''}
+              onChange={onChange}
+              className="form-input"
+              placeholder="Please specify your medical condition"
+              required
+            />
+          </div>
+        )}
+        
+        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          💡 Select the condition that best matches your situation. Choose "None / Healthy" if you have no medical conditions.
+        </div>
+        
+        {form[step.name] && (
+          <div className="age-validation">
+            {(form[step.name] !== 'Other (Please specify)' || form.customDisease) ? (
+              <span className="validation-success">✓ Medical condition selected</span>
+            ) : form[step.name] === 'Other (Please specify)' && !form.customDisease ? (
+              <span className="validation-error">Please specify your medical condition</span>
+            ) : null}
           </div>
         )}
       </div>
@@ -201,11 +316,11 @@ function MealTabs({ selectedMeal, setSelectedMeal }) {
   );
 }
 
-// Enhanced Main Tabs Component
+// Enhanced Main Tabs Component - Focused on Recommendations Only
 function MainTabs({ activeMainTab, setActiveMainTab }) {
   const tabs = [
     { id: 'recommendations', label: '🤖 AI Recommendations', icon: '🤖' },
-    { id: 'dashboard', label: '📈 Analytics & Food', icon: '📈' }
+    { id: 'analytics', label: '📈 Food Analytics', icon: '📈' }
   ];
   
   const handleTabClick = (tabId) => {
@@ -338,7 +453,7 @@ function RecommendationList({ mealData, userProfile, onAddToFoodLogger, selected
 // Main Component
 export default function GeminiRecommend() {
   const [form, setForm] = useState({ 
-    age: '', medication: '', disease: '', gender: '', foodType: '', 
+    age: '', medication: '', disease: '', customDisease: '', gender: '', foodType: '', 
     bmi: '', weight: '', height: '' 
   });
   const [step, setStep] = useState(0);
@@ -355,13 +470,14 @@ export default function GeminiRecommend() {
     const handleHashChange = () => {
       const hash = window.location.hash.substring(1);
       switch (hash) {
+        case 'analytics':
         case 'dashboard':
-          setActiveMainTab('dashboard');
+          setActiveMainTab('analytics');
           break;
         case 'food-logger':
         case 'meal-plan':
         case 'nutrition':
-          setActiveMainTab('dashboard');
+          setActiveMainTab('analytics');
           break;
         default:
           if (hash) {
@@ -376,25 +492,22 @@ export default function GeminiRecommend() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Load saved user input and health profile
+  // Load logged foods only (no saved inputs)
   useEffect(() => {
-    if (user && user.email) {
-      axios.get(`${API_URL}/api/user-input?email=${encodeURIComponent(user.email)}`)
-        .then(res => {
-          if (res.data.input) {
-            setForm(f => ({ ...f, ...res.data.input }));
-          }
-        })
-        .catch(() => console.log('No saved input found'));
-        
-      // Also fetch any logged foods if you have a food logging API
-      axios.get(`${API_URL}/api/food-logger?email=${encodeURIComponent(user.email)}`)
-        .then(res => {
-          if (res.data.foods) setLoggedFoods(res.data.foods);
-        })
-        .catch(() => console.log('No logged foods found'));
-    }
-  }, [user]);
+    const loadLoggedFoods = async () => {
+      const currentUser = JSON.parse(localStorage.getItem('medimeal_user'));
+      if (currentUser && currentUser.email) {
+        try {
+          const foodRes = await axios.get(`${API_URL}/api/food-logger?email=${encodeURIComponent(currentUser.email)}`);
+          if (foodRes.data.foods) setLoggedFoods(foodRes.data.foods);
+        } catch {
+          console.log('No logged foods found');
+        }
+      }
+    };
+    
+    loadLoggedFoods();
+  }, []); // Empty dependency array for one-time load
   
   // Function to handle adding foods to the food logger with sync support
   const handleAddToFoodLogger = (selectedFoods) => {
@@ -445,11 +558,11 @@ export default function GeminiRecommend() {
       
       toast.success(`${selectedFoods.length} recommended item${selectedFoods.length > 1 ? 's' : ''} added to your food logger and synchronized!`);
       
-      // If user is not already in the food logger tab, ask if they want to go there
-      if (activeMainTab !== 'dashboard') {
+      // If user is not already in the analytics tab, ask if they want to go there
+      if (activeMainTab !== 'analytics') {
         setTimeout(() => {
-          if (confirm('Would you like to go to the Food Logger to see your updated meals?')) {
-            setActiveMainTab('dashboard');
+          if (confirm('Would you like to go to the Food Analytics to see your updated meals?')) {
+            setActiveMainTab('analytics');
             window.location.hash = 'food-logger';
           }
         }, 1000); // Small delay to ensure toast is visible
@@ -479,9 +592,29 @@ export default function GeminiRecommend() {
   const handleCalculateBMI = () => {
     const weight = parseFloat(form.weight);
     const height = parseFloat(form.height) / 100; // Convert cm to meters
-    if (weight && height) {
-      const bmi = (weight / (height * height)).toFixed(1);
+    const gender = form.gender;
+    
+    if (weight && height && gender) {
+      let bmi;
+      
+      // Gender-specific BMI calculations
+      if (gender === 'Male') {
+        // For males: BMI = weight(kg) / (height(m)^2) * 0.95 (slight adjustment for male body composition)
+        bmi = ((weight / (height * height)) * 0.95).toFixed(1);
+      } else if (gender === 'Female') {
+        // For females: BMI = weight(kg) / (height(m)^2) * 1.05 (slight adjustment for female body composition)
+        bmi = ((weight / (height * height)) * 1.05).toFixed(1);
+      } else {
+        // For 'Other' gender: use standard BMI calculation
+        bmi = (weight / (height * height)).toFixed(1);
+      }
+      
       setForm({ ...form, bmi });
+    } else if (weight && height && !gender) {
+      // If gender not selected, show message to select gender first
+      alert('Please select your gender first for accurate BMI calculation');
+    } else {
+      alert('Please enter both weight and height to calculate BMI');
     }
   };
 
@@ -504,15 +637,24 @@ export default function GeminiRecommend() {
       return;
     }
     
-    // Medication validation
+    // Enhanced medication validation
     const medicationValidation = validateMedication(form.medication);
     if (!medicationValidation.isValid) {
       toast.error(medicationValidation.error);
       return;
     }
     
-    // Disease/Medical Condition validation
-    const diseaseValidation = validateHealthCondition(form.disease);
+    // Enhanced disease/medical condition validation
+    let finalDisease = form.disease;
+    if (form.disease === 'Other (Please specify)') {
+      if (!form.customDisease || form.customDisease.trim() === '') {
+        toast.error('Please specify your medical condition.');
+        return;
+      }
+      finalDisease = form.customDisease.trim();
+    }
+    
+    const diseaseValidation = validateHealthCondition(finalDisease);
     if (!diseaseValidation.isValid) {
       toast.error(diseaseValidation.error);
       return;
@@ -539,7 +681,7 @@ export default function GeminiRecommend() {
         gender: form.gender,
         foodType: form.foodType,
         medication: form.medication,
-        disease: form.disease, // Backend still expects 'disease' field
+        disease: finalDisease, // Use processed disease value
         bmi: form.bmi || null,
         weight: form.weight ? parseFloat(form.weight) : null,
         height: form.height ? parseFloat(form.height) : null,
@@ -572,20 +714,6 @@ export default function GeminiRecommend() {
       
       // Redirect to recommendations tab after successful input
       setActiveMainTab('recommendations');
-      
-      // Save user input to database
-      if (user && user.email) {
-        try {
-          await axios.post(`${API_URL}/api/user-input`, {
-            email: user.email,
-            input: requestData,
-            recommendations: enhancedData
-          });
-          console.log('User input and recommendations saved successfully');
-        } catch (saveError) {
-          console.error('Error saving user input:', saveError);
-        }
-      }
       
     } catch (error) {
       console.error('Error getting recommendations:', error);
@@ -712,28 +840,29 @@ export default function GeminiRecommend() {
         </>
       )}
 
-      {activeMainTab === 'dashboard' && (
-        <UserDashboard 
-          user={user} 
-          loggedFoods={loggedFoods} 
-          onFoodAdded={(newFood) => {
-            // Add the new food to the logged foods state
-            const foodWithMetadata = {
-              ...newFood,
-              userId: user?.email || 'guest',
-              id: Date.now() // Simple ID generation
-            };
-            
-            setLoggedFoods(prev => [...prev, foodWithMetadata]);
-            
-            // Save to backend with proper food structure
-            if (user?.email) {
-              const foodForBackend = {
-                food: newFood.name,
-                mealType: newFood.mealType,
-                calories: newFood.calories,
-                protein: newFood.protein,
-                carbs: newFood.carbs,
+      {activeMainTab === 'analytics' && (
+        <div className="analytics-section">
+          <UserDashboard 
+            user={user} 
+            loggedFoods={loggedFoods} 
+            onFoodAdded={(newFood) => {
+              // Add the new food to the logged foods state
+              const foodWithMetadata = {
+                ...newFood,
+                userId: user?.email || 'guest',
+                id: Date.now() // Simple ID generation
+              };
+              
+              setLoggedFoods(prev => [...prev, foodWithMetadata]);
+              
+              // Save to backend with proper food structure
+              if (user?.email) {
+                const foodForBackend = {
+                  food: newFood.name,
+                  mealType: newFood.mealType,
+                  calories: newFood.calories,
+                  protein: newFood.protein,
+                  carbs: newFood.carbs,
                 fat: newFood.fat,
                 fiber: newFood.fiber,
                 source: 'manual',
@@ -753,6 +882,7 @@ export default function GeminiRecommend() {
             }
           }}
         />
+        </div>
       )}
     </div>
   );

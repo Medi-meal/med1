@@ -1,0 +1,24 @@
+{
+  "watch": [
+    ".",
+    "models/",
+    "routes/"
+  ],
+  "ext": "js,json,env",
+  "ignore": [
+    "node_modules/",
+    "*.test.js",
+    "*.spec.js",
+    "coverage/",
+    "diet_data.db",
+    "checkTables.js",
+    "checkData.js"
+  ],
+  "delay": 1000,
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "colours": true,
+  "legacyWatch": false,
+  "verbose": true
+}

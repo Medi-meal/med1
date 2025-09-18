@@ -44,7 +44,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
     };
     
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 5000); // Check less frequently
+    const interval = setInterval(handleStorageChange, 3000); // Optimized check interval
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -101,7 +101,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 100);
+      }, 50);
     }
   }, [location.state, setShowAbout]);
 

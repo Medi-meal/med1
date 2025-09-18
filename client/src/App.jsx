@@ -42,7 +42,7 @@ function App() {
     window.addEventListener('storage', checkUser);
     
     // Check less frequently to avoid unnecessary re-renders
-    const interval = setInterval(checkUser, 5000); // Changed from 1000ms to 5000ms
+    const interval = setInterval(checkUser, 3000); // Reduced from 5000ms to 3000ms for faster response
     
     return () => {
       window.removeEventListener('storage', checkUser);
@@ -72,7 +72,6 @@ function App() {
 
   const handleFAQClick = () => handleNavigationClick('faq');
   const handleContactClick = () => handleNavigationClick('contact');
-  const handleSupportClick = () => handleNavigationClick('support');
   const handleSubscriptionClick = () => handleNavigationClick('subscription');
 
   // Conditional home page component
@@ -90,12 +89,12 @@ function App() {
         onAboutClick={handleAboutClick}
         onFAQClick={handleFAQClick}
         onContactClick={handleContactClick}
-        onSupportClick={handleSupportClick}
         onSubscriptionClick={handleSubscriptionClick}
       />
       <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Landing showAbout={showAbout} setShowAbout={setShowAbout} />} />
+          <Route path="/dashboard" element={user && user.email ? <UserHomeDashboard user={user} /> : <Landing showAbout={showAbout} setShowAbout={setShowAbout} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/gemini-recommend" element={<ErrorBoundary>
