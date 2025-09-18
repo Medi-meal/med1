@@ -70,7 +70,7 @@ export default function Navbar(props) {
         window.location.hash = '#food-logger';
         break;
       case 'profile':
-        navigate('/profile');
+        navigate('/gemini-recommend#user-details');
         break;
       default:
         break;
@@ -134,9 +134,9 @@ export default function Navbar(props) {
                     <path d="M4 20c0-2.21 3.58-4 8-4s8 1.79 8 4" fill="#a2b9d7"/>
                   </svg>
                 </span>
-                <Link to="/profile" className="navbar-username" style={{ color: '#fff', textDecoration: 'none', cursor: 'pointer' }}>
+                <a onClick={() => handleQuickAction('profile')} className="navbar-username" style={{ color: '#fff', textDecoration: 'none', cursor: 'pointer' }}>
                   {user.name ? user.name : 'User'}
-                </Link>
+                </a>
                 <button className="navbar-logout" onClick={handleLogout}>Logout</button>
               </div>
             ) : (
